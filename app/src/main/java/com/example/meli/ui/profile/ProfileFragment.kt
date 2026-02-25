@@ -1,4 +1,4 @@
-package com.example.meli.ui.dashboard
+package com.example.meli.ui.profile
 
 import android.os.Bundle
 import android.util.Log
@@ -8,21 +8,21 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.example.meli.databinding.FragmentDashboardBinding
+import com.example.meli.databinding.FragmentProfileBinding
 
-private const val TAG = "MeliLifecycle"
+class ProfileFragment : Fragment() {
 
-class DashboardFragment : Fragment() {
-
-    private var _binding: FragmentDashboardBinding? = null
+    private var _binding: FragmentProfileBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
 
+    private val TAG = "MeliLifecycle"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d(TAG, "HomeFragment onCreate")
+        Log.d(TAG, "ProfileFragment onCreate")
     }
 
     override fun onCreateView(
@@ -30,15 +30,15 @@ class DashboardFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.d(TAG, "HomeFragment onCreateView")
-        val dashboardViewModel =
-            ViewModelProvider(this).get(DashboardViewModel::class.java)
+        Log.d(TAG, "ProfileFragment onCreateView")
+        val profileViewModel =
+            ViewModelProvider(this).get(ProfileViewModel::class.java)
 
-        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
+        _binding = FragmentProfileBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textDashboard
-        dashboardViewModel.text.observe(viewLifecycleOwner) {
+        val textView: TextView = binding.textProfile
+        profileViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }
         return root
@@ -46,22 +46,22 @@ class DashboardFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "HomeFragment onResume")
+        Log.d(TAG, "ProfileFragment onResume")
     }
 
     override fun onPause() {
-        Log.d(TAG, "HomeFragment onPause")
+        Log.d(TAG, "ProfileFragment onPause")
         super.onPause()
     }
 
     override fun onDestroyView() {
-        Log.d(TAG, "HomeFragment onDestroy")
+        Log.d(TAG, "ProfileFragment onDestroy")
         super.onDestroyView()
         _binding = null
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "HomeFragment onDestroy")
+        Log.d(TAG, "ProfileFragment onDestroy")
         super.onDestroy()
     }
 }
