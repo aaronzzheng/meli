@@ -33,6 +33,7 @@
         android:layout_width="54dp"
         android:layout_height="55dp"
         android:layout_margin="16dp"
+        android:contentDescription="@string/cd_menu_action"
         android:src="@drawable/menu_24dp_000000_fill0_wght400_grad0_opsz24"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"

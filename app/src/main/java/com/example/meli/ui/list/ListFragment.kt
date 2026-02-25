@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.meli.databinding.FragmentListBinding
 
-private const val TAG = "MeliLifecycle"
+private const val TAG = "ListLifecycle"
 
 class ListFragment : Fragment() {
 

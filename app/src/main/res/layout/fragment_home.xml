@@ -22,10 +22,11 @@
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="49dp"
-        android:layout_height="26dp"
-        android:text="meli"
-        android:textSize="20sp"
+        android:layout_width="71dp"
+        android:layout_height="48dp"
+        android:text="@string/app_name"
+        android:textSize="32sp"
+        android:textStyle="bold"
 
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -36,11 +37,27 @@
         app:layout_constraintVertical_bias="0.052" />
 
     <ImageButton
-        android:id="@+id/imageButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="232dp"
+        android:id="@+id/button_settings"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="260dp"
         android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/cd_open_settings"
+
+        android:src="@drawable/menu_24dp_000000_fill0_wght400_grad0_opsz24"
+        app:layout_constraintBottom_toBottomOf="@id/textView"
+        app:layout_constraintStart_toEndOf="@id/textView"
+        app:layout_constraintTop_toTopOf="@id/textView"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <ImageButton
+        android:id="@+id/notification_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="212dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Open_Notification"
+        android:labelFor="@id/notification_button"
         android:padding="8dp"
         android:src="@drawable/ic_profile_black_24dp"
 

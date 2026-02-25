@@ -9,8 +9,10 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.meli.databinding.FragmentHomeBinding
+import androidx.navigation.fragment.findNavController
+import com.example.meli.R
 
-private const val TAG = "MeliLifecycle"
+private const val TAG = "HomeLifecycle"
 
 class HomeFragment : Fragment() {
 
@@ -42,6 +44,21 @@ class HomeFragment : Fragment() {
             textView.text = it
         }
         return root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // ** THIS IS THE CRITICAL STEP **
+        // Assume your settings button in fragment_home.xml has the id "button_settings"
+        binding.buttonSettings.setOnClickListener {
+            // This line triggers the navigation action you defined in XML
+            findNavController().navigate(R.id.navigation_home_to_settingsFragment)
+        }
+        binding.notificationButton.setOnClickListener {
+            findNavController().navigate(R.id.action_navigation_home_to_notificationFragment)
+        }
+
     }
 
     override fun onResume() {

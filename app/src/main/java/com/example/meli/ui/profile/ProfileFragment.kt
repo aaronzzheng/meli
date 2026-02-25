@@ -1,14 +1,15 @@
 package com.example.meli.ui.profile
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.fragment.findNavController
-import com.example.meli.R
 import com.example.meli.databinding.FragmentProfileBinding
+
+private val TAG = "SearchLifecycle"
 
 class ProfileFragment : Fragment() {
 
@@ -20,6 +21,7 @@ class ProfileFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Log.d(TAG, "ProfileFragment onCreate")
         val profileViewModel =
             ViewModelProvider(this).get(ProfileViewModel::class.java)
 
@@ -30,15 +32,27 @@ class ProfileFragment : Fragment() {
             binding.textProfile.text = it
         }
 
-        binding.logoutButton.setOnClickListener {
-            findNavController().navigate(R.id.action_navigation_profile_to_navigation_login)
-        }
-
         return root
     }
 
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "ProfileFragment onResume")
+    }
+
+    override fun onPause() {
+        Log.d(TAG, "ProfileFragment onPause")
+        super.onPause()
+    }
+
     override fun onDestroyView() {
+        Log.d(TAG, "ProfileFragment onDestroy")
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onDestroy() {
+        Log.d(TAG, "ProfileFragment onDestroy")
+        super.onDestroy()
     }
 }

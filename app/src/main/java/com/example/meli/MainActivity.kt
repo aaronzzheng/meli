@@ -31,10 +31,18 @@ class MainActivity : AppCompatActivity() {
 
         // Hide bottom navigation on the login screen
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            if (destination.id == R.id.navigation_login) {
-                navView.visibility = View.GONE
-            } else {
-                navView.visibility = View.VISIBLE
+            when (destination.id) {
+                // List of destinations where the bottom nav should be visible
+                R.id.navigation_home,
+                R.id.navigation_list,
+                R.id.navigation_search,
+                R.id.navigation_profile -> {
+                    navView.visibility = View.VISIBLE
+                }
+                // For all other destinations, hide it
+                else -> {
+                    navView.visibility = View.GONE
+                }
             }
         }
     }
