@@ -1,6 +1,7 @@
 package com.example.meli.ui.notifications
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,11 +18,19 @@ class NotificationsFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
+    private val TAG = "MeliLifecycle"
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d(TAG, "HomeFragment onCreate")
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Log.d(TAG, "HomeFragment onCreateView")
         val notificationsViewModel =
             ViewModelProvider(this).get(NotificationsViewModel::class.java)
 
