@@ -11,6 +11,9 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.meli.R
 import com.example.meli.databinding.FragmentLoginBinding
+import android.util.Log
+
+private const val TAG = "LoginLifecycle"
 
 class LoginFragment : Fragment() {
 
@@ -24,11 +27,13 @@ class LoginFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Log.d(TAG, "LoginFragment onCreateView")
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        Log.d(TAG, "LoginFragment onViewCreated")
         super.onViewCreated(view, savedInstanceState)
 
         viewModel.state.observe(viewLifecycleOwner) { state ->
@@ -70,6 +75,7 @@ class LoginFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        Log.d(TAG, "LoginFragment onDestroy")
         super.onDestroyView()
         _binding = null
     }
