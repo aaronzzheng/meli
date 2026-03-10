@@ -16,6 +16,9 @@
       <SelectionState runConfigName="firestoreCrud_succeeds()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+      <SelectionState runConfigName="seedFirestoreSchema()">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
     </selectionStates>
   </component>
 </project>
