@@ -56,4 +56,23 @@ class FirestoreConnectionTest {
         }
         assertTrue("Expected document to be deleted", deleted)
     }
+
+    @Test
+    fun firestoreCreate_persistsForManualCheck() {
+        val firestore = FirebaseFirestore.getInstance()
+        val docId = "manual-check-${UUID.randomUUID()}"
+        val docRef = firestore.collection("codex_connection_tests_manual").document(docId)
+        val payload = mapOf(
+            "status" to "created_for_manual_check",
+            "createdAt" to System.currentTimeMillis(),
+            "note" to "This document is intentionally not deleted by test."
+        )
+
+        Tasks.await(docRef.set(payload), 15, TimeUnit.SECONDS)
+        val snapshot = Tasks.await(docRef.get(Source.SERVER), 15, TimeUnit.SECONDS)
+
+        assertTrue("Expected manual-check document to exist", snapshot.exists())
+        assertEquals("created_for_manual_check", snapshot.getString("status"))
+        assertNotNull(snapshot.getLong("createdAt"))
+    }
 }
