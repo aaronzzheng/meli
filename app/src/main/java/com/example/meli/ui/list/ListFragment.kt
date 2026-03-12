@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.meli.databinding.FragmentListBinding
+import com.example.meli.ui.viewmodel.ListViewModel
 
 private const val TAG = "ListLifecycle"
 
@@ -31,8 +32,7 @@ class ListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         Log.d(TAG, "ListFragment onCreateView")
-        val listViewModel =
-            ViewModelProvider(this).get(ListViewModel::class.java)
+        val listViewModel = ViewModelProvider(this)[ListViewModel::class.java]
 
         _binding = FragmentListBinding.inflate(inflater, container, false)
         val root: View = binding.root

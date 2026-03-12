@@ -31,13 +31,13 @@ class NotificationFragment : Fragment(){
         savedInstanceState: Bundle?
     ): View {
         Log.d(TAG, "NotificationFragment onCreateView")
-        val settingsViewModel =
+        val notificationViewModel =
             ViewModelProvider(this)[NotificationViewModel::class.java]
 
         _binding = FragmentNotificationBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        settingsViewModel.text.observe(viewLifecycleOwner) {
+        notificationViewModel.text.observe(viewLifecycleOwner) {
             binding.textNotification.text = it
         }
         return root
@@ -53,22 +53,22 @@ class NotificationFragment : Fragment(){
 
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "SettingsFragment onResume")
+        Log.d(TAG, "NotificationFragment onResume")
     }
 
     override fun onPause() {
-        Log.d(TAG, "SettingsFragment onPause")
+        Log.d(TAG, "NotificationFragment onPause")
         super.onPause()
     }
 
     override fun onDestroyView() {
-        Log.d(TAG, "SettingsFragment onDestroy")
+        Log.d(TAG, "NotificationFragment onDestroyView")
         super.onDestroyView()
         _binding = null
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "SettingsFragment onDestroy")
+        Log.d(TAG, "NotificationFragment onDestroy")
         super.onDestroy()
     }
 }

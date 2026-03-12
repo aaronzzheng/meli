@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.meli.databinding.FragmentProfileBinding
 
-private val TAG = "SearchLifecycle"
+private const val TAG = "ProfileLifecycle"
 
 class ProfileFragment : Fragment() {
 
@@ -21,7 +21,7 @@ class ProfileFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.d(TAG, "ProfileFragment onCreate")
+        Log.d(TAG, "ProfileFragment onCreateView")
         val profileViewModel =
             ViewModelProvider(this).get(ProfileViewModel::class.java)
 
