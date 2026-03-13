@@ -15,6 +15,12 @@ class NotesActivity : AppCompatActivity() {
     private lateinit var binding: ActivityNotesBinding
     private val viewModel: NotesViewModel by viewModels()
     private val authViewModel: AuthViewModel by viewModels()
+    private val adapter by lazy {
+        NoteAdapter(
+            onEdit = { note -> showNoteDialog(note.id, note.title) },
+            onDelete = { note -> viewModel.deleteNote(note.id) }
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,12 +28,10 @@ class NotesActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.notesRv.layoutManager = LinearLayoutManager(this)
+        binding.notesRv.adapter = adapter
 
         viewModel.notes.observe(this) { notes ->
-            binding.notesRv.adapter = NoteAdapter(notes ?: emptyList(),
-                onEdit = { note -> showNoteDialog(note.id, note.title) },
-                onDelete = { note -> viewModel.deleteNote(note.id) }
-            )
+            adapter.submitList(notes)
         }
 
         binding.addNoteFab.setOnClickListener { showNoteDialog() }
@@ -45,7 +49,9 @@ class NotesActivity : AppCompatActivity() {
             .setView(input)
             .setPositiveButton("Save") { _, _ ->
                 val title = input.text.toString()
-                if (id == null) viewModel.addNote(title) else viewModel.updateNote(id, title)
+                if (title.isNotBlank()) {
+                    if (id == null) viewModel.addNote(title) else viewModel.updateNote(id, title)
+                }
             }
             .setNegativeButton("Cancel", null)
             .show()
