@@ -19,7 +19,7 @@ class FirestoreConnectionTest {
     fun firestoreCrud_succeeds() {
         val firestore = FirebaseFirestore.getInstance()
         val docId = "connectivity-${UUID.randomUUID()}"
-        val docRef = firestore.collection("codex_connection_tests").document(docId)
+        val docRef = firestore.collection("connection_tests").document(docId)
         val createdAt = System.currentTimeMillis()
         val initialPayload = mapOf(
             "status" to "created",
@@ -61,7 +61,7 @@ class FirestoreConnectionTest {
     fun firestoreCreate_persistsForManualCheck() {
         val firestore = FirebaseFirestore.getInstance()
         val docId = "manual-check-${UUID.randomUUID()}"
-        val docRef = firestore.collection("codex_connection_tests_manual").document(docId)
+        val docRef = firestore.collection("tests_manual").document(docId)
         val payload = mapOf(
             "status" to "created_for_manual_check",
             "createdAt" to System.currentTimeMillis(),

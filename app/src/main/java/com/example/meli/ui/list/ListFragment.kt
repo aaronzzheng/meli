@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.meli.databinding.FragmentListBinding
@@ -40,6 +41,28 @@ class ListFragment : Fragment() {
         val textView: TextView = binding.textList
         listViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
+        }
+
+        listViewModel.addResult.observe(viewLifecycleOwner) { message ->
+            if (!message.isNullOrBlank()) {
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                if (message.startsWith("Added")) {
+                    binding.inputListItem.text?.clear()
+                }
+                listViewModel.onAddResultConsumed()
+            }
+        }
+
+        binding.buttonAddItem.setOnClickListener {
+            listViewModel.addItem(binding.inputListItem.text?.toString().orEmpty())
+        }
+
+        binding.buttonUpdateLatest.setOnClickListener {
+            listViewModel.updateLatestItem(binding.inputListItem.text?.toString().orEmpty())
+        }
+
+        binding.buttonDeleteLatest.setOnClickListener {
+            listViewModel.deleteLatestItem()
         }
         return root
     }

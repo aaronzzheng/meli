@@ -13,4 +13,8 @@
     <string name="cd_open_settings">Open settings</string>
     <string name="cd_close_settings">Close settings</string>
     <string name="cd_menu_action">Menu action</string>
+    <string name="list_item_hint">Type something</string>
+    <string name="list_add">Add</string>
+    <string name="list_update_latest">Update Latest</string>
+    <string name="list_delete_latest">Delete Latest</string>
 </resources>

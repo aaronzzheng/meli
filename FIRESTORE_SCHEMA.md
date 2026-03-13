@@ -1,8 +1,9 @@
-# Firestore Data Model (Denormalized)
+# Firestore Schema (Simple)
 
-Based on the SQL schema, this is a Firestore-friendly denormalized structure.
+This app uses **Cloud Firestore**.
+Database: **(default)**
 
-## Core Collections
+## Main Collections
 
 ### `/users/{uid}`
 - `displayName`
@@ -11,17 +12,11 @@ Based on the SQL schema, this is a Firestore-friendly denormalized structure.
 - `createdAt`
 - `spotify`: `{ spotifyUserId, tokenExpiresAt }`
 
-Note: Keep sensitive OAuth tokens in a private subcollection if needed.
-
 ### `/usernames/{username}`
 - `uid`
 
-Used to enforce unique usernames via transaction.
-
-### `/emails/{emailHashOrKey}`
+### `/emails/{email}`
 - `uid`
-
-Used to enforce unique emails via transaction.
 
 ### `/artists/{spotifyArtistId}`
 - `name`
@@ -29,8 +24,8 @@ Used to enforce unique emails via transaction.
 ### `/albums/{spotifyAlbumId}`
 - `title`
 - `releaseDate`
-- `artistIds: []`
-- `artistNames: []` (denormalized)
+- `artistIds`
+- `artistNames`
 
 ### `/tracks/{spotifyTrackId}`
 - `title`
@@ -38,18 +33,24 @@ Used to enforce unique emails via transaction.
 - `explicit`
 - `albumId`
 - `albumTitle`
-- `artistIds: []`
-- `artistNames: []`
+- `artistIds`
+- `artistNames`
 
-## User-Scoped Subcollections
+### `/comparisonSessions/{pairId_timestamp}`
+- `userAId`
+- `userBId`
+- `pairId`
+- `createdAt`
+- `overlapCount`
+- `similarityScore`
+
+## User Subcollections
 
 ### `/users/{uid}/friends/{otherUid}`
 - `status` (`PENDING | ACCEPTED | BLOCKED`)
 - `requestedAt`
 - `acceptedAt`
 - `direction` (`OUTGOING | INCOMING`)
-
-Store friendship docs on both users for fast reads.
 
 ### `/users/{uid}/ratings/{trackId}`
 - `score`
@@ -59,9 +60,6 @@ Store friendship docs on both users for fast reads.
 - `trackTitle`
 - `artistNames`
 - `albumTitle`
-
-Optional mirror for track-centric reads:
-- `/tracks/{trackId}/ratings/{uid}`
 
 ### `/users/{uid}/rankingLists/{listId}`
 - `name`
@@ -73,22 +71,65 @@ Optional mirror for track-centric reads:
 - `trackTitle`
 - `artistNames`
 
-## Comparison Sessions
+## List Screen CRUD Collection
 
-### `/comparisonSessions/{pairId_timestamp}`
-- `userAId`
-- `userBId`
+### `/tests_manual/{docId}`
+- `text`
 - `createdAt`
-- `overlapCount`
-- `similarityScore`
-- `pairId`
+- `updatedAt`
 
-Recommended `pairId` format:
-- `min(uidA, uidB) + "_" + max(uidA, uidB)`
+Used by List screen buttons:
+- Add
+- Update Latest
+- Delete Latest
 
-## Firestore-Specific Notes
+## SQL-Style Compatibility Collections (for checkpoint checks)
 
-- No joins: duplicate small, read-heavy fields (names/titles) where helpful.
-- No built-in unique constraints: enforce with transactions + lock docs (`/usernames/...`, `/emails/...`).
-- Many-to-many (`track_artists`) maps well to arrays on track/album docs.
-- Create composite indexes for common query patterns (for example: `status + requestedAt`, `user + createdAt`, `pairId + createdAt`).
+### `/credentials/{userId}`
+- `credential_id`
+- `user_id`
+- `username`
+- `password_hash`
+- `hash_algorithm`
+- `created_at`
+
+### `/spotify_links/{userId}`
+- `spotify_link_id`
+- `user_id`
+- `spotify_user_id`
+- `access_token`
+- `refresh_token`
+- `token_expires_at`
+
+### `/friendships/{requester_addressee}`
+- `friendship_id`
+- `requester_user_id`
+- `addressee_user_id`
+- `status`
+- `requested_at`
+- `accepted_at`
+
+### `/track_artists/{track_artist}`
+- `track_id`
+- `artist_id`
+
+### `/ranking_lists/{user_list}`
+- `ranking_list_id`
+- `user_id`
+- `name`
+- `created_at`
+
+### `/ranking_entries/{list_track}`
+- `ranking_entry_id`
+- `ranking_list_id`
+- `track_id`
+- `rank_position`
+- `updated_at`
+
+### `/comparison_sessions/{pair_timestamp}`
+- `comparison_id`
+- `user_a_id`
+- `user_b_id`
+- `created_at`
+- `overlap_count`
+- `similarity_score`
