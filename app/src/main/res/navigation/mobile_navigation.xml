@@ -48,6 +48,12 @@
         android:label="@string/title_profile"
         tools:layout="@layout/fragment_profile">
         <action
+            android:id="@+id/action_navigation_profile_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_navigation_profile_to_friendsFragment"
+            app:destination="@id/friendsFragment" />
+        <action
             android:id="@+id/action_navigation_profile_to_navigation_login"
             app:destination="@id/navigation_login"
             app:popUpTo="@id/mobile_navigation"
@@ -57,6 +63,9 @@
         android:id="@+id/settingsFragment"
         android:name="com.example.meli.ui.settings.SettingsFragment"
         android:label="@string/title_settings">
+        <action
+            android:id="@+id/action_settingsFragment_to_accountSettingsFragment"
+            app:destination="@id/accountSettingsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_navigation_login"
             app:destination="@id/navigation_login"
@@ -69,4 +78,16 @@
         android:name="com.example.meli.ui.notification.NotificationFragment"
         android:label="Notifications"
         tools:layout="@layout/fragment_notification" />
+
+    <fragment
+        android:id="@+id/friendsFragment"
+        android:name="com.example.meli.ui.friends.FriendsFragment"
+        android:label="Friends"
+        tools:layout="@layout/fragment_friends" />
+
+    <fragment
+        android:id="@+id/accountSettingsFragment"
+        android:name="com.example.meli.ui.settings.AccountSettingsFragment"
+        android:label="Account"
+        tools:layout="@layout/fragment_account_settings" />
 </navigation>

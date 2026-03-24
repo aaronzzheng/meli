@@ -6,9 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.meli.R
+import com.example.meli.data.repository.AuthRepository
 import com.example.meli.databinding.FragmentSettingsBinding
 
 class SettingsFragment : Fragment() {
@@ -31,26 +31,24 @@ class SettingsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         Log.d(TAG, "SettingsFragment onCreateView")
-        val settingsViewModel =
-            ViewModelProvider(this)[SettingsViewModel::class.java]
-
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
-        val root: View = binding.root
-
-        settingsViewModel.text.observe(viewLifecycleOwner) {
-            binding.textSettings.text = it
-        }
-        return root
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val authRepository = AuthRepository()
 
         binding.buttonCloseSettings.setOnClickListener {
             findNavController().navigateUp()
         }
 
+        binding.accountButton.setOnClickListener {
+            findNavController().navigate(R.id.action_settingsFragment_to_accountSettingsFragment)
+        }
+
         binding.logoutButton.setOnClickListener {
+            authRepository.logout()
             findNavController().navigate(R.id.action_settingsFragment_to_navigation_login)
         }
     }

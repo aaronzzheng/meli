@@ -36,7 +36,10 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_home,
                 R.id.navigation_list,
                 R.id.navigation_search,
-                R.id.navigation_profile -> {
+                R.id.navigation_profile,
+                R.id.settingsFragment,
+                R.id.friendsFragment,
+                R.id.accountSettingsFragment -> {
                     navView.visibility = View.VISIBLE
                 }
                 // For all other destinations, hide it
