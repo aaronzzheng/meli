@@ -1,5 +1,6 @@
 package com.example.meli.ui.settings
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Patterns
 import android.view.LayoutInflater
@@ -9,6 +10,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.meli.R
 import com.example.meli.data.repository.AuthRepository
 import com.example.meli.databinding.FragmentAccountSettingsBinding
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
@@ -76,6 +78,17 @@ class AccountSettingsFragment : Fragment() {
             }
             binding.passwordInput.setText("")
         }
+
+        binding.deleteAccountButton.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Delete account?")
+                .setMessage("This permanently deletes your account and profile data. This cannot be undone.")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Delete") { _, _ ->
+                    runDeleteAccount(authRepository)
+                }
+                .show()
+        }
     }
 
     private fun runUpdate(
@@ -102,6 +115,29 @@ class AccountSettingsFragment : Fragment() {
         binding.saveNameButton.isEnabled = !isLoading
         binding.saveEmailButton.isEnabled = !isLoading
         binding.savePasswordButton.isEnabled = !isLoading
+        binding.deleteAccountButton.isEnabled = !isLoading
+    }
+
+    private fun runDeleteAccount(authRepository: AuthRepository) {
+        setLoading(true)
+        viewLifecycleOwner.lifecycleScope.launch {
+            authRepository.deleteAccount()
+                .onSuccess {
+                    Toast.makeText(requireContext(), "Account deleted", Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(
+                        R.id.action_accountSettingsFragment_to_navigation_login
+                    )
+                }
+                .onFailure { throwable ->
+                    val message = if (throwable is FirebaseAuthRecentLoginRequiredException) {
+                        "Please log in again before deleting your account."
+                    } else {
+                        throwable.localizedMessage ?: "Failed to delete account."
+                    }
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+                }
+            setLoading(false)
+        }
     }
 
     override fun onDestroyView() {

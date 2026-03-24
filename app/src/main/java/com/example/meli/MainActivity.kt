@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_search,
                 R.id.navigation_profile,
                 R.id.settingsFragment,
+                R.id.settingsDetailFragment,
                 R.id.friendsFragment,
                 R.id.accountSettingsFragment -> {
                     navView.visibility = View.VISIBLE

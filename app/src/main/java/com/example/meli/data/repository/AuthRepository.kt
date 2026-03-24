@@ -5,6 +5,7 @@ import com.example.meli.model.User
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
@@ -98,6 +99,42 @@ class AuthRepository {
             Result.success(bytes)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    suspend fun deleteAccount(): Result<Unit> {
+        return try {
+            val user = auth.currentUser ?: throw Exception("No signed-in user")
+            val uid = user.uid
+            val userRef = firestore.collection("users").document(uid)
+
+            // Remove nested ranking entries first.
+            val rankingLists = userRef.collection("rankingLists").get().await()
+            for (listDoc in rankingLists.documents) {
+                deleteSubcollection(listDoc.reference, "entries")
+                listDoc.reference.delete().await()
+            }
+
+            // Remove known per-user subcollections.
+            deleteSubcollection(userRef, "friends")
+            deleteSubcollection(userRef, "ratings")
+            deleteSubcollection(userRef, "tests_manual")
+
+            // Remove user profile document.
+            userRef.delete().await()
+
+            // Finally remove Firebase Auth account.
+            user.delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun deleteSubcollection(parent: DocumentReference, subcollection: String) {
+        val snapshot = parent.collection(subcollection).get().await()
+        for (doc in snapshot.documents) {
+            doc.reference.delete().await()
         }
     }
 

@@ -5,10 +5,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.meli.R
-import com.example.meli.data.repository.AuthRepository
 import com.example.meli.databinding.FragmentSettingsBinding
 
 class SettingsFragment : Fragment() {
@@ -37,19 +37,19 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val authRepository = AuthRepository()
 
         binding.buttonCloseSettings.setOnClickListener {
             findNavController().navigateUp()
         }
 
-        binding.accountButton.setOnClickListener {
-            findNavController().navigate(R.id.action_settingsFragment_to_accountSettingsFragment)
+        binding.settingsOptionRow.setOnClickListener {
+            findNavController().navigate(R.id.action_settingsFragment_to_settingsDetailFragment)
         }
-
-        binding.logoutButton.setOnClickListener {
-            authRepository.logout()
-            findNavController().navigate(R.id.action_settingsFragment_to_navigation_login)
+        binding.faqOptionRow.setOnClickListener {
+            Toast.makeText(requireContext(), "FAQ coming soon", Toast.LENGTH_SHORT).show()
+        }
+        binding.importOptionRow.setOnClickListener {
+            Toast.makeText(requireContext(), "Import Songs coming soon", Toast.LENGTH_SHORT).show()
         }
     }
 
