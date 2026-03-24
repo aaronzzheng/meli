@@ -1,6 +1,7 @@
 package com.example.meli.ui.login
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,9 +12,8 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.meli.R
 import com.example.meli.databinding.FragmentLoginBinding
-import android.util.Log
 
-private const val TAG = "LoginLifecycle"
+private const val TAG = "LoginFragment"
 
 class LoginFragment : Fragment() {
 
@@ -27,13 +27,11 @@ class LoginFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.d(TAG, "LoginFragment onCreateView")
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        Log.d(TAG, "LoginFragment onViewCreated")
         super.onViewCreated(view, savedInstanceState)
 
         viewModel.state.observe(viewLifecycleOwner) { state ->
@@ -51,13 +49,6 @@ class LoginFragment : Fragment() {
             }
         }
 
-        viewModel.navigateToSignIn.observe(viewLifecycleOwner) { navigate ->
-            if (navigate) {
-                Toast.makeText(context, "Account created successfully!", Toast.LENGTH_SHORT).show()
-                viewModel.onNavigationConsumed()
-            }
-        }
-
         viewModel.navigateToHome.observe(viewLifecycleOwner) { navigate ->
             if (navigate) {
                 findNavController().navigate(R.id.action_navigation_login_to_navigation_home)
@@ -65,8 +56,22 @@ class LoginFragment : Fragment() {
             }
         }
 
+        viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.actionButton.isEnabled = !isLoading
+            binding.toggleButton.isEnabled = !isLoading
+        }
+
         binding.actionButton.setOnClickListener {
-            viewModel.onActionButtonClicked()
+            val email = binding.usernameEditText.text.toString()
+            val pass = binding.passwordEditText.text.toString()
+            val name = binding.nameEditText.text.toString()
+            viewModel.onActionButtonClicked(email, pass, name)
         }
 
         binding.toggleButton.setOnClickListener {
@@ -75,7 +80,6 @@ class LoginFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        Log.d(TAG, "LoginFragment onDestroy")
         super.onDestroyView()
         _binding = null
     }
