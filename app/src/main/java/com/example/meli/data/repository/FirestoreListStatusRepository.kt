@@ -1,15 +1,34 @@
 package com.example.meli.data.repository
 
 import com.example.meli.model.ListStatus
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.UUID
 
 class FirestoreListStatusRepository(
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) : ListStatusRepository {
 
+    private fun userListCollection() = auth.currentUser?.uid?.let { uid ->
+        firestore.collection("users")
+            .document(uid)
+            .collection("tests_manual")
+    }
+
     override fun loadStatus(onResult: (ListStatus) -> Unit) {
-        firestore.collection("tests_manual")
+        val collection = userListCollection()
+        if (collection == null) {
+            onResult(
+                ListStatus(
+                    message = "Please sign in to view your list.",
+                    source = "Firestore"
+                )
+            )
+            return
+        }
+
+        collection
             .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .limit(5)
             .get()
@@ -38,6 +57,12 @@ class FirestoreListStatusRepository(
     }
 
     override fun addListItem(text: String, onComplete: (Result<Unit>) -> Unit) {
+        val collection = userListCollection()
+        if (collection == null) {
+            onComplete(Result.failure(IllegalStateException("No signed-in user.")))
+            return
+        }
+
         val docId = "item-${UUID.randomUUID()}"
         val now = System.currentTimeMillis()
         val payload = mapOf(
@@ -46,7 +71,7 @@ class FirestoreListStatusRepository(
             "updatedAt" to now
         )
 
-        firestore.collection("tests_manual")
+        collection
             .document(docId)
             .set(payload)
             .addOnSuccessListener {
@@ -58,8 +83,14 @@ class FirestoreListStatusRepository(
     }
 
     override fun updateLatestListItem(text: String, onComplete: (Result<Unit>) -> Unit) {
+        val collection = userListCollection()
+        if (collection == null) {
+            onComplete(Result.failure(IllegalStateException("No signed-in user.")))
+            return
+        }
+
         val now = System.currentTimeMillis()
-        firestore.collection("tests_manual")
+        collection
             .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .limit(1)
             .get()
@@ -86,7 +117,13 @@ class FirestoreListStatusRepository(
     }
 
     override fun deleteLatestListItem(onComplete: (Result<Unit>) -> Unit) {
-        firestore.collection("tests_manual")
+        val collection = userListCollection()
+        if (collection == null) {
+            onComplete(Result.failure(IllegalStateException("No signed-in user.")))
+            return
+        }
+
+        collection
             .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .limit(1)
             .get()

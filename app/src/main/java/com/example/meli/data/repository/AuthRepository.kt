@@ -1,19 +1,17 @@
 package com.example.meli.data.repository
 
-import android.net.Uri
+import android.util.Base64
 import com.example.meli.model.User
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 
 class AuthRepository {
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
-    private val storage = FirebaseStorage.getInstance()
 
     fun getCurrentUser() = auth.currentUser
 
@@ -72,40 +70,31 @@ class AuthRepository {
         }
     }
 
-    suspend fun uploadProfilePhoto(imageUri: Uri): Result<String> {
+    suspend fun uploadProfilePhoto(imageBytes: ByteArray): Result<Unit> {
         return try {
             val user = auth.currentUser ?: throw Exception("No signed-in user")
-            val photoRef = storage.reference.child("profile_pictures/${user.uid}.jpg")
-            photoRef.putFile(imageUri).await()
-            val downloadUri = photoRef.downloadUrl.await()
-
-            user.updateProfile(
-                UserProfileChangeRequest.Builder()
-                    .setPhotoUri(downloadUri)
-                    .build()
-            ).await()
+            val encoded = Base64.encodeToString(imageBytes, Base64.NO_WRAP)
 
             firestore.collection("users")
                 .document(user.uid)
-                .set(mapOf("profileImageUrl" to downloadUri.toString()), SetOptions.merge())
+                .set(mapOf("profileImageBase64" to encoded), SetOptions.merge())
                 .await()
 
-            Result.success(downloadUri.toString())
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun getProfilePhotoBytes(maxBytes: Long = 5 * 1024 * 1024): Result<ByteArray?> {
+    suspend fun getProfilePhotoBytes(): Result<ByteArray?> {
         return try {
             val user = auth.currentUser ?: return Result.success(null)
             val userDoc = firestore.collection("users").document(user.uid).get().await()
-            val firestoreUrl = userDoc.getString("profileImageUrl")
-            val photoUrl = firestoreUrl ?: user.photoUrl?.toString()
-            if (photoUrl.isNullOrBlank()) {
+            val encoded = userDoc.getString("profileImageBase64")
+            if (encoded.isNullOrBlank()) {
                 return Result.success(null)
             }
-            val bytes = storage.getReferenceFromUrl(photoUrl).getBytes(maxBytes).await()
+            val bytes = Base64.decode(encoded, Base64.DEFAULT)
             Result.success(bytes)
         } catch (e: Exception) {
             Result.failure(e)

@@ -1,5 +1,6 @@
 package com.example.meli.ui.profile
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
@@ -19,6 +20,8 @@ import com.example.meli.R
 import com.example.meli.data.repository.AuthRepository
 import com.example.meli.databinding.FragmentProfileBinding
 import com.google.firebase.auth.FirebaseAuth
+import java.io.ByteArrayOutputStream
+import kotlin.math.max
 import kotlinx.coroutines.launch
 
 private const val TAG = "ProfileLifecycle"
@@ -100,7 +103,16 @@ class ProfileFragment : Fragment() {
 
         lifecycleScope.launch {
             if (!isAdded) return@launch
-            authRepository.uploadProfilePhoto(uri).onSuccess {
+            val compressed = readCompressedImageBytes(uri)
+            if (compressed == null) {
+                Toast.makeText(requireContext(), "Could not read selected image", Toast.LENGTH_LONG).show()
+                _binding?.profileAvatarImage?.isEnabled = true
+                _binding?.profileAvatarImage?.alpha = 1f
+                loadProfileImageFromCloud()
+                return@launch
+            }
+
+            authRepository.uploadProfilePhoto(compressed).onSuccess {
                 Toast.makeText(requireContext(), "Profile picture updated", Toast.LENGTH_SHORT).show()
                 loadProfileImageFromCloud()
             }.onFailure { error ->
@@ -114,6 +126,41 @@ class ProfileFragment : Fragment() {
             _binding?.profileAvatarImage?.isEnabled = true
             _binding?.profileAvatarImage?.alpha = 1f
         }
+    }
+
+    private fun readCompressedImageBytes(uri: Uri): ByteArray? {
+        val resolver = requireContext().contentResolver
+
+        val boundsOptions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        resolver.openInputStream(uri)?.use { stream ->
+            BitmapFactory.decodeStream(stream, null, boundsOptions)
+        } ?: return null
+
+        val maxDim = max(boundsOptions.outWidth, boundsOptions.outHeight)
+        if (maxDim <= 0) return null
+
+        var sampleSize = 1
+        while (maxDim / sampleSize > 768) {
+            sampleSize *= 2
+        }
+
+        val decodeOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+        val decodedBitmap = resolver.openInputStream(uri)?.use { stream ->
+            BitmapFactory.decodeStream(stream, null, decodeOptions)
+        } ?: return null
+
+        val scaledBitmap = if (max(decodedBitmap.width, decodedBitmap.height) > 512) {
+            val ratio = 512f / max(decodedBitmap.width, decodedBitmap.height).toFloat()
+            val targetW = (decodedBitmap.width * ratio).toInt().coerceAtLeast(1)
+            val targetH = (decodedBitmap.height * ratio).toInt().coerceAtLeast(1)
+            android.graphics.Bitmap.createScaledBitmap(decodedBitmap, targetW, targetH, true)
+        } else {
+            decodedBitmap
+        }
+
+        val output = ByteArrayOutputStream()
+        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 72, output)
+        return output.toByteArray()
     }
 
     private fun loadProfileImageFromCloud() {
