@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <color name="meli_ink">#111111</color>
+    <color name="meli_paper">#FFFDF9</color>
+    <color name="meli_surface">#FFFFFFFF</color>
+    <color name="meli_surface_subtle">#FFF4EE</color>
+    <color name="meli_line">#1F1F1F</color>
+    <color name="meli_line_soft">#D9D1C7</color>
+    <color name="meli_text_muted">#5F5A55</color>
+    <color name="meli_green">#2F7E69</color>
+    <color name="meli_green_soft">#E3F4EC</color>
+    <color name="meli_red">#B23A32</color>
+    <color name="meli_red_soft">#FBE9E7</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

@@ -4,62 +4,67 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/meli_paper"
+    android:padding="@dimen/meli_screen_padding"
     tools:context=".ui.list.ListFragment">
 
-    <EditText
-        android:id="@+id/input_list_item"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/listInputLayout"
+        style="@style/Widget.Meli.TextInputLayout.Outlined"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
         android:hint="@string/list_item_hint"
-        android:inputType="text"
-        android:maxLines="1"
         app:layout_constraintEnd_toStartOf="@+id/button_add_item"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
+        <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/input_list_item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/button_add_item"
+        style="@style/Widget.Meli.PrimaryButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
         android:text="@string/list_add"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/input_list_item" />
+        app:layout_constraintTop_toTopOf="@id/listInputLayout" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/button_update_latest"
+        style="@style/Widget.Meli.OutlinedActionButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:layout_marginTop="12dp"
         android:layout_marginEnd="8dp"
         android:text="@string/list_update_latest"
         app:layout_constraintEnd_toStartOf="@+id/button_delete_latest"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_list_item" />
+        app:layout_constraintTop_toBottomOf="@id/listInputLayout" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/button_delete_latest"
+        style="@style/Widget.Meli.OutlinedActionButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="12dp"
-        android:layout_marginEnd="16dp"
         android:text="@string/list_delete_latest"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/button_update_latest"
-        app:layout_constraintTop_toBottomOf="@id/input_list_item" />
+        app:layout_constraintTop_toBottomOf="@id/listInputLayout" />
 
     <TextView
         android:id="@+id/text_list"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
-        android:layout_marginEnd="16dp"
+        android:textColor="@color/meli_ink"
         android:textAlignment="viewStart"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"

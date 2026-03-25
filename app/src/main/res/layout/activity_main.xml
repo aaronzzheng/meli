@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/meli_paper">
 
     <fragment
         android:id="@+id/nav_host_fragment_activity_main"
@@ -22,7 +23,7 @@
         android:id="@+id/nav_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?android:attr/windowBackground"
+        style="@style/Widget.Meli.BottomNavigation"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -35,6 +36,10 @@
         android:layout_margin="16dp"
         android:contentDescription="@string/cd_menu_action"
         android:src="@drawable/menu_24dp_000000_fill0_wght400_grad0_opsz24"
+        app:backgroundTint="@color/meli_surface"
+        app:borderWidth="2dp"
+        app:rippleColor="@color/meli_surface_subtle"
+        app:tint="@color/meli_ink"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

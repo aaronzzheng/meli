@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="14dp"
+    android:layout_marginBottom="@dimen/meli_card_spacing"
     android:background="@drawable/bg_profile_card"
     android:gravity="center_vertical"
     android:orientation="horizontal"
@@ -33,9 +33,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Julie wants to add you as a friend!"
-            android:textColor="@android:color/black"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.Meli.SectionTitle"
+            android:textSize="17sp" />
 
         <TextView
             android:id="@+id/notificationTimeText"
@@ -43,7 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="2d"
-            android:textColor="#666666"
+            android:textColor="@color/meli_text_muted"
             android:textSize="13sp" />
 
         <TextView
@@ -51,7 +50,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:textColor="#666666"
+            android:textColor="@color/meli_text_muted"
             android:textSize="13sp"
             android:visibility="gone" />
     </LinearLayout>

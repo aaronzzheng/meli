@@ -5,18 +5,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingStart="20dp"
-    android:paddingTop="20dp"
-    android:paddingEnd="20dp">
+    android:background="@color/meli_paper"
+    android:paddingStart="@dimen/meli_screen_padding"
+    android:paddingTop="@dimen/meli_screen_padding"
+    android:paddingEnd="@dimen/meli_screen_padding">
 
     <ImageButton
         android:id="@+id/button_close_notification"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        style="@style/Widget.Meli.IconButton"
         android:contentDescription="@string/cd_close_settings"
         android:src="@android:drawable/ic_media_previous"
-        android:tint="@android:color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -25,9 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/notification_screen_title"
-        android:textColor="@android:color/black"
-        android:textSize="32sp"
-        android:textStyle="bold"
+        android:textAppearance="@style/TextAppearance.Meli.ScreenTitle"
         app:layout_constraintBottom_toBottomOf="@id/button_close_notification"
         app:layout_constraintStart_toEndOf="@id/button_close_notification"
         app:layout_constraintTop_toTopOf="@id/button_close_notification" />
@@ -38,8 +34,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="18dp"
         android:text="No notifications yet."
-        android:textColor="#666666"
-        android:textSize="16sp"
+        android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

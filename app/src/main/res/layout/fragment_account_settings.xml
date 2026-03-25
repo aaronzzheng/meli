@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
+    android:background="@color/meli_paper"
     tools:context=".ui.settings.AccountSettingsFragment">
 
     <LinearLayout
@@ -25,20 +26,18 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Account"
-                android:textSize="32sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.Meli.ScreenTitle" />
 
             <ImageButton
                 android:id="@+id/button_back_account"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                style="@style/Widget.Meli.IconButton"
                 android:contentDescription="Go back"
                 app:srcCompat="@android:drawable/ic_media_previous" />
         </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/name_input_layout"
+            style="@style/Widget.Meli.TextInputLayout.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
@@ -51,8 +50,9 @@
                 android:inputType="textPersonName" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/save_name_button"
+            style="@style/Widget.Meli.OutlinedActionButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -60,6 +60,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/email_input_layout"
+            style="@style/Widget.Meli.TextInputLayout.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
@@ -72,8 +73,9 @@
                 android:inputType="textEmailAddress" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/save_email_button"
+            style="@style/Widget.Meli.OutlinedActionButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -81,6 +83,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/password_input_layout"
+            style="@style/Widget.Meli.TextInputLayout.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
@@ -93,25 +96,22 @@
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/save_password_button"
+            style="@style/Widget.Meli.OutlinedActionButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Save Password" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/delete_account_button"
-            style="?attr/borderlessButtonStyle"
+            style="@style/Widget.Meli.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:background="@android:color/transparent"
-            android:minHeight="0dp"
-            android:minWidth="0dp"
-            android:padding="0dp"
             android:text="Delete Account"
-            android:textColor="#B00020" />
+            android:textColor="@color/meli_red" />
 
     </LinearLayout>
 </ScrollView>

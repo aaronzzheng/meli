@@ -4,15 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/meli_paper"
     tools:context=".ui.profile.ProfileFragment">
 
     <LinearLayout
         android:id="@+id/profileTopSection"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginStart="@dimen/meli_screen_padding"
+        android:layout_marginTop="@dimen/meli_screen_padding"
+        android:layout_marginEnd="@dimen/meli_screen_padding"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -30,18 +31,13 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Name"
-                android:textColor="@android:color/black"
-                android:textSize="28sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.Meli.ScreenTitle" />
 
             <ImageButton
                 android:id="@+id/profileMenuButton"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@android:color/transparent"
+                style="@style/Widget.Meli.IconButton"
                 android:contentDescription="@string/cd_open_settings"
-                android:src="@drawable/menu_24dp_000000_fill0_wght400_grad0_opsz24"
-                android:tint="@android:color/black" />
+                android:src="@drawable/menu_24dp_000000_fill0_wght400_grad0_opsz24" />
         </LinearLayout>
 
         <LinearLayout
@@ -88,50 +84,38 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/profileAddFriendButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.Meli.OutlinedActionButton"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
                 android:layout_marginTop="14dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:minWidth="0dp"
                 android:text="Add Friend"
-                android:textAllCaps="false"
-                android:textColor="@android:color/black"
-                android:visibility="gone"
-                app:cornerRadius="20dp"
-                app:strokeColor="@android:color/black"
-                app:strokeWidth="2dp" />
+                android:visibility="gone" />
         </LinearLayout>
 
         <TextView
-            android:id="@+id/profileActivityHeaderText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:text="Your Activity"
-            android:textColor="@android:color/black"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+        android:id="@+id/profileActivityHeaderText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:text="Your Activity"
+        android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
 
         <View
             android:id="@+id/profileActivityDivider"
             android:layout_width="match_parent"
             android:layout_height="2dp"
             android:layout_marginTop="8dp"
-            android:background="@android:color/black" />
+            android:background="@color/meli_line" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/profileActivityEmptyText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
+        android:layout_marginStart="@dimen/meli_screen_padding"
         android:layout_marginTop="14dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginEnd="@dimen/meli_screen_padding"
         android:text="No ranking activity yet."
-        android:textColor="#555555"
-        android:textSize="16sp"
+        android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -142,9 +126,9 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:paddingStart="20dp"
+        android:paddingStart="@dimen/meli_screen_padding"
         android:paddingTop="14dp"
-        android:paddingEnd="20dp"
+        android:paddingEnd="@dimen/meli_screen_padding"
         android:paddingBottom="12dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"

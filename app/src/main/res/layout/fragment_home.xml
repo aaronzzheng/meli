@@ -4,9 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingStart="20dp"
-    android:paddingTop="20dp"
-    android:paddingEnd="20dp"
+    android:background="@color/meli_paper"
+    android:paddingStart="@dimen/meli_screen_padding"
+    android:paddingTop="@dimen/meli_screen_padding"
+    android:paddingEnd="@dimen/meli_screen_padding"
     tools:context=".ui.home.HomeFragment">
 
     <LinearLayout
@@ -25,44 +26,32 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/app_name"
-            android:textColor="@android:color/black"
-            android:textSize="28sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.Meli.ScreenTitle" />
 
         <ImageButton
             android:id="@+id/notification_button"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@android:color/transparent"
+            style="@style/Widget.Meli.IconButton"
             android:contentDescription="Open notifications"
             android:padding="6dp"
-            android:src="@drawable/ic_profile_black_24dp"
-            android:tint="@android:color/black" />
+            android:src="@drawable/ic_profile_black_24dp" />
 
         <ImageButton
             android:id="@+id/button_settings"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            style="@style/Widget.Meli.IconButton"
             android:layout_marginStart="8dp"
-            android:background="@android:color/transparent"
             android:contentDescription="@string/cd_open_settings"
-            android:src="@drawable/menu_24dp_000000_fill0_wght400_grad0_opsz24"
-            android:tint="@android:color/black" />
+            android:src="@drawable/menu_24dp_000000_fill0_wght400_grad0_opsz24" />
     </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/homeSearchCard"
+        style="@style/Widget.Meli.SearchCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        app:cardBackgroundColor="@android:color/white"
-        app:cardCornerRadius="28dp"
-        app:cardElevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/homeHeaderRow"
-        app:strokeColor="@android:color/black"
-        app:strokeWidth="2dp">
+        app:layout_constraintTop_toBottomOf="@id/homeHeaderRow">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -78,7 +67,7 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_search_black_24dp"
-                android:tint="@android:color/black" />
+                android:tint="@color/meli_ink" />
 
             <EditText
                 android:id="@+id/homeSearchEditText"
@@ -93,26 +82,22 @@
                 android:inputType="text"
                 android:maxLines="1"
                 android:padding="0dp"
-                android:textColor="@android:color/black"
-                android:textColorHint="#6A6A6A"
+                android:textColor="@color/meli_ink"
+                android:textColorHint="@color/meli_text_muted"
                 android:textSize="16sp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/homeSearchDropdownCard"
+        style="@style/Widget.Meli.DropdownCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:visibility="gone"
-        app:cardBackgroundColor="@android:color/white"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="10dp"
         app:layout_constraintEnd_toEndOf="@id/homeSearchCard"
         app:layout_constraintStart_toStartOf="@id/homeSearchCard"
-        app:layout_constraintTop_toBottomOf="@id/homeSearchCard"
-        app:strokeColor="#DDDDDD"
-        app:strokeWidth="1dp">
+        app:layout_constraintTop_toBottomOf="@id/homeSearchCard">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -129,8 +114,7 @@
                 android:paddingEnd="8dp"
                 android:paddingBottom="8dp"
                 android:text="No users found."
-                android:textColor="#555555"
-                android:textSize="15sp"
+                android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
                 android:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
@@ -150,9 +134,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="28dp"
         android:text="Your Feed"
-        android:textColor="@android:color/black"
-        android:textSize="24sp"
-        android:textStyle="bold"
+        android:textAppearance="@style/TextAppearance.Meli.SectionTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/homeSearchCard" />
 
@@ -161,7 +143,7 @@
         android:layout_width="0dp"
         android:layout_height="2dp"
         android:layout_marginTop="8dp"
-        android:background="@android:color/black"
+        android:background="@color/meli_line"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/homeFeedHeaderText" />
@@ -172,8 +154,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
         android:text="No recent ranking activity yet."
-        android:textColor="#555555"
-        android:textSize="16sp"
+        android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp"
+    android:background="@color/meli_paper"
+    android:padding="@dimen/meli_screen_padding"
     tools:context=".ui.friends.FriendsFragment">
 
     <TextView
@@ -12,9 +13,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Friends"
-        android:textColor="@android:color/black"
-        android:textSize="28sp"
-        android:textStyle="bold"
+        android:textAppearance="@style/TextAppearance.Meli.ScreenTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -25,8 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:text="No friends added yet."
-        android:textColor="#555555"
-        android:textSize="18sp"
+        android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -1,21 +1,46 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Theme.Meli" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/meli_ink</item>
+        <item name="colorOnPrimary">@color/meli_paper</item>
+        <item name="colorSecondary">@color/meli_green</item>
+        <item name="colorOnSecondary">@color/meli_paper</item>
+        <item name="colorSurface">@color/meli_paper</item>
+        <item name="colorOnSurface">@color/meli_ink</item>
+        <item name="colorSurfaceVariant">@color/meli_surface_subtle</item>
+        <item name="colorOnSurfaceVariant">@color/meli_text_muted</item>
+        <item name="colorOutline">@color/meli_line_soft</item>
+        <item name="colorError">@color/meli_red</item>
+        <item name="android:colorBackground">@color/meli_paper</item>
+        <item name="android:windowBackground">@color/meli_paper</item>
+        <item name="android:statusBarColor">@color/meli_paper</item>
+        <item name="android:navigationBarColor">@color/meli_paper</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="bottomNavigationStyle">@style/Widget.Meli.BottomNavigation</item>
+        <item name="materialCardViewStyle">@style/Widget.Meli.Card</item>
+        <item name="textInputStyle">@style/Widget.Meli.TextInputLayout.Outlined</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Meli.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Meli.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Meli.Large</item>
     </style>
 
     <style name="ShapeAppearanceMeliCircle">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="ShapeAppearance.Meli.Small" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">14dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Meli.Medium" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Meli.Large" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">28dp</item>
     </style>
 </resources>
