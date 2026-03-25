@@ -51,7 +51,7 @@ class LoginViewModel : ViewModel() {
                     _isLoading.value = false
                     return@launch
                 }
-                authRepository.register(email, pass)
+                authRepository.register(email, pass, name)
             } else {
                 authRepository.login(email, pass)
             }

@@ -5,24 +5,39 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.example.meli.R
 import com.example.meli.databinding.FragmentNotificationBinding
+import com.google.firebase.auth.FirebaseAuth
 
-class NotificationFragment : Fragment(){
+class NotificationFragment : Fragment() {
     private var _binding: FragmentNotificationBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
+    private val viewModel: NotificationViewModel by viewModels()
+    private val notificationAdapter = NotificationAdapter(
+        onAccept = { notification ->
+            viewModel.respondToFriendRequest(
+                uid = FirebaseAuth.getInstance().currentUser?.uid,
+                notification = notification,
+                accept = true
+            )
+        },
+        onDecline = { notification ->
+            viewModel.respondToFriendRequest(
+                uid = FirebaseAuth.getInstance().currentUser?.uid,
+                notification = notification,
+                accept = false
+            )
+        }
+    )
 
-    private val TAG = "NotificationLifecycle"
+    private val tagName = "NotificationLifecycle"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d(TAG, "NotificationFragment onCreate")
+        Log.d(tagName, "NotificationFragment onCreate")
     }
 
     override fun onCreateView(
@@ -30,45 +45,63 @@ class NotificationFragment : Fragment(){
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.d(TAG, "NotificationFragment onCreateView")
-        val notificationViewModel =
-            ViewModelProvider(this)[NotificationViewModel::class.java]
-
+        Log.d(tagName, "NotificationFragment onCreateView")
         _binding = FragmentNotificationBinding.inflate(inflater, container, false)
-        val root: View = binding.root
-
-        notificationViewModel.text.observe(viewLifecycleOwner) {
-            binding.textNotification.text = it
-        }
-        return root
+        binding.notificationRecyclerView.adapter = notificationAdapter
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        observeNotifications()
         binding.buttonCloseNotification.setOnClickListener {
             findNavController().navigateUp()
+        }
+        viewModel.loadNotifications(FirebaseAuth.getInstance().currentUser?.uid)
+    }
+
+    private fun observeNotifications() {
+        viewModel.notifications.observe(viewLifecycleOwner) { notifications ->
+            notificationAdapter.submitList(notifications)
+            binding.notificationEmptyText.visibility =
+                if (notifications.isEmpty()) View.VISIBLE else View.GONE
+        }
+
+        viewModel.error.observe(viewLifecycleOwner) { error ->
+            if (!error.isNullOrBlank()) {
+                binding.notificationEmptyText.text = error
+                binding.notificationEmptyText.visibility = View.VISIBLE
+            }
+        }
+
+        viewModel.actionMessage.observe(viewLifecycleOwner) { message ->
+            if (!message.isNullOrBlank()) {
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                viewModel.clearActionMessage()
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "NotificationFragment onResume")
+        Log.d(tagName, "NotificationFragment onResume")
+        viewModel.loadNotifications(FirebaseAuth.getInstance().currentUser?.uid)
     }
 
     override fun onPause() {
-        Log.d(TAG, "NotificationFragment onPause")
+        Log.d(tagName, "NotificationFragment onPause")
         super.onPause()
     }
 
     override fun onDestroyView() {
-        Log.d(TAG, "NotificationFragment onDestroyView")
+        Log.d(tagName, "NotificationFragment onDestroyView")
         super.onDestroyView()
+        binding.notificationRecyclerView.adapter = null
         _binding = null
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "NotificationFragment onDestroy")
+        Log.d(tagName, "NotificationFragment onDestroy")
         super.onDestroy()
     }
 }

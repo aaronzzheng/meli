@@ -10,9 +10,53 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // Each user can read/write only their own user document and subcollections.
+    function isFriendParticipant(uid, friendUid) {
+      return isSignedIn() && (request.auth.uid == uid || request.auth.uid == friendUid);
+    }
+
+    // Signed-in users can discover basic profiles for search and social features.
     match /users/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read: if isSignedIn();
+      allow write: if isOwner(uid);
+
+      // Signed-in users can read friend edges for counts/social state.
+      match /friends/{friendUid} {
+        allow read: if isSignedIn();
+        allow create: if isFriendParticipant(uid, friendUid);
+        allow update, delete: if isFriendParticipant(uid, friendUid);
+      }
+
+      match /notifications/{notificationId} {
+        allow read: if isOwner(uid);
+        allow update: if isOwner(uid)
+          || (isSignedIn()
+          && resource.data.type == "FRIEND_REQUEST"
+          && resource.data.actorUid == request.auth.uid
+          && request.resource.data.actorUid == request.auth.uid
+          && request.resource.data.type == "FRIEND_REQUEST");
+        allow delete: if isOwner(uid)
+          || (isSignedIn()
+          && resource.data.type == "FRIEND_REQUEST"
+          && resource.data.actorUid == request.auth.uid);
+        allow create: if isSignedIn() && request.resource.data.actorUid == request.auth.uid;
+      }
+
+      // Ranking activity is visible to signed-in users so feeds can aggregate friend updates.
+      match /rankingLists/{listId} {
+        allow read: if isSignedIn();
+        allow write: if isOwner(uid);
+
+        match /entries/{entryId} {
+          allow read: if isSignedIn();
+          allow write: if isOwner(uid);
+        }
+      }
+
+      // Ratings remain private unless you later choose to expose them.
+      match /ratings/{ratingId} {
+        allow read, write: if isOwner(uid);
+      }
+
       match /{document=**} {
         allow read, write: if isOwner(uid);
       }

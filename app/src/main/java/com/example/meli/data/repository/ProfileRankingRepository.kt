@@ -16,46 +16,32 @@ class ProfileRankingRepository(
 
     suspend fun loadUserRankings(uid: String): Result<List<ProfileRankingActivity>> {
         return try {
-            val rankingListsSnapshot = firestore.collection("users")
+            Result.success(loadRankingsForUser(uid))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun loadFeedRankings(uid: String): Result<List<ProfileRankingActivity>> {
+        return try {
+            val feedUserIds = linkedSetOf(uid)
+            val friendsSnapshot = firestore.collection("users")
                 .document(uid)
-                .collection("rankingLists")
+                .collection("friends")
+                .whereEqualTo("status", "ACCEPTED")
                 .get()
                 .await()
 
-            val activities = mutableListOf<ProfileRankingActivity>()
-
-            for (listDoc in rankingListsSnapshot.documents) {
-                val listName = listDoc.getString("name")
-                val entriesSnapshot = listDoc.reference
-                    .collection("entries")
-                    .get()
-                    .await()
-
-                for (entryDoc in entriesSnapshot.documents) {
-                    val title = entryDoc.getString("trackTitle").orEmpty().ifBlank { "Unknown Song" }
-                    val artistText = extractArtistText(entryDoc.get("artistNames"))
-                    val rankingScore = extractRankingScore(
-                        entryDoc.get("score") ?: entryDoc.get("rankingScore")
-                    ) ?: entryDoc.getLong("rankPosition")?.toDouble()
-                        ?: entryDoc.getLong("rank_position")?.toDouble()
-                    val updatedAtMillis = extractTimestampMillis(
-                        entryDoc.get("updatedAt") ?: entryDoc.get("updated_at")
-                    )
-
-                    activities += ProfileRankingActivity(
-                        id = "${listDoc.id}_${entryDoc.id}",
-                        trackTitle = title,
-                        artistText = artistText,
-                        rankingScore = rankingScore,
-                        updatedAtMillis = updatedAtMillis,
-                        listName = listName
-                    )
-                }
+            for (friendDoc in friendsSnapshot.documents) {
+                feedUserIds += friendDoc.id
             }
 
-            Result.success(
-                activities.sortedByDescending { it.updatedAtMillis }
-            )
+            val activities = mutableListOf<ProfileRankingActivity>()
+            for (feedUid in feedUserIds) {
+                activities += loadRankingsForUser(feedUid)
+            }
+
+            Result.success(activities.sortedByDescending { it.updatedAtMillis })
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -153,6 +139,72 @@ class ProfileRankingRepository(
             is List<*> -> rawArtistField.filterIsInstance<String>().joinToString(", ")
             else -> ""
         }
+    }
+
+    private suspend fun loadRankingsForUser(uid: String): List<ProfileRankingActivity> {
+        val userDoc = firestore.collection("users")
+            .document(uid)
+            .get()
+            .await()
+        val actorName = resolveActorName(uid, userDoc)
+
+        val rankingListsSnapshot = firestore.collection("users")
+            .document(uid)
+            .collection("rankingLists")
+            .get()
+            .await()
+
+        val activities = mutableListOf<ProfileRankingActivity>()
+
+        for (listDoc in rankingListsSnapshot.documents) {
+            val listName = listDoc.getString("name")
+            val entriesSnapshot = listDoc.reference
+                .collection("entries")
+                .get()
+                .await()
+
+            for (entryDoc in entriesSnapshot.documents) {
+                activities += buildActivity(uid, actorName, listDoc.id, listName, entryDoc)
+            }
+        }
+
+        return activities.sortedByDescending { it.updatedAtMillis }
+    }
+
+    private fun buildActivity(
+        uid: String,
+        actorName: String,
+        listId: String,
+        listName: String?,
+        entryDoc: com.google.firebase.firestore.DocumentSnapshot
+    ): ProfileRankingActivity {
+        val title = entryDoc.getString("trackTitle").orEmpty().ifBlank { "Unknown Song" }
+        val artistText = extractArtistText(entryDoc.get("artistNames"))
+        val rankingScore = extractRankingScore(
+            entryDoc.get("score") ?: entryDoc.get("rankingScore")
+        ) ?: entryDoc.getLong("rankPosition")?.toDouble()
+            ?: entryDoc.getLong("rank_position")?.toDouble()
+        val updatedAtMillis = extractTimestampMillis(
+            entryDoc.get("updatedAt") ?: entryDoc.get("updated_at")
+        )
+
+        return ProfileRankingActivity(
+            id = "${uid}_${listId}_${entryDoc.id}",
+            actorUid = uid,
+            actorName = actorName,
+            trackTitle = title,
+            artistText = artistText,
+            rankingScore = rankingScore,
+            updatedAtMillis = updatedAtMillis,
+            listName = listName
+        )
+    }
+
+    private fun resolveActorName(uid: String, userDoc: com.google.firebase.firestore.DocumentSnapshot): String {
+        return userDoc.getString("displayName")?.takeIf { it.isNotBlank() }
+            ?: userDoc.getString("username")?.takeIf { it.isNotBlank() }
+            ?: userDoc.getString("email")?.substringBefore("@")?.takeIf { it.isNotBlank() }
+            ?: uid.take(8)
     }
 
     private fun extractTimestampMillis(rawTimestamp: Any?): Long {

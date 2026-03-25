@@ -19,12 +19,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.meli.R
 import com.example.meli.data.repository.AuthRepository
 import com.example.meli.databinding.FragmentProfileBinding
+import com.example.meli.model.FriendshipStatus
+import com.example.meli.model.UserProfileSummary
 import com.google.firebase.auth.FirebaseAuth
 import java.io.ByteArrayOutputStream
 import kotlin.math.max
 import kotlinx.coroutines.launch
 
 private const val TAG = "ProfileLifecycle"
+private const val ARG_PROFILE_UID = "profileUid"
 
 class ProfileFragment : Fragment() {
 
@@ -37,6 +40,9 @@ class ProfileFragment : Fragment() {
         uri ?: return@registerForActivityResult
         uploadProfileImage(uri)
     }
+    private val currentUid get() = FirebaseAuth.getInstance().currentUser?.uid
+    private val viewedUid get() = arguments?.getString(ARG_PROFILE_UID) ?: currentUid
+    private val isOwnProfile get() = viewedUid == currentUid
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,15 +52,30 @@ class ProfileFragment : Fragment() {
         Log.d(TAG, "ProfileFragment onCreateView")
         _binding = FragmentProfileBinding.inflate(inflater, container, false)
         binding.profileMenuButton.setOnClickListener {
-            findNavController().navigate(R.id.action_navigation_profile_to_settingsFragment)
+            if (isOwnProfile) {
+                findNavController().navigate(R.id.action_navigation_profile_to_settingsFragment)
+            } else {
+                findNavController().navigateUp()
+            }
         }
         binding.profileFriendCountText.setOnClickListener {
-            findNavController().navigate(R.id.action_navigation_profile_to_friendsFragment)
+            if (isOwnProfile) {
+                findNavController().navigate(R.id.action_navigation_profile_to_friendsFragment)
+            }
         }
         binding.profileAvatarImage.setOnClickListener {
-            imagePicker.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-            )
+            if (isOwnProfile) {
+                imagePicker.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
+        }
+        binding.profileAddFriendButton.setOnClickListener {
+            when (viewModel.profile.value?.friendshipStatus) {
+                FriendshipStatus.REQUESTED -> viewModel.cancelFriendRequest(currentUid, viewedUid)
+                FriendshipStatus.NONE -> viewModel.sendFriendRequest(currentUid, viewedUid)
+                else -> Unit
+            }
         }
         binding.profileActivityRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.profileActivityRecyclerView.adapter = rankingAdapter
@@ -63,10 +84,10 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        bindProfileHeader()
-        loadProfileImageFromCloud()
         observeRankings()
-        viewModel.loadRankings(FirebaseAuth.getInstance().currentUser?.uid)
+        viewModel.loadProfile(viewedUid, currentUid)
+        loadProfileImageFromCloud(viewedUid)
+        viewModel.loadRankings(viewedUid, allowSeed = isOwnProfile)
     }
 
     private fun observeRankings() {
@@ -86,14 +107,37 @@ class ProfileFragment : Fragment() {
                 Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
             }
         }
+
+        viewModel.profile.observe(viewLifecycleOwner) { profile ->
+            bindProfileHeader(profile)
+        }
+
+        viewModel.friendActionMessage.observe(viewLifecycleOwner) { message ->
+            if (!message.isNullOrBlank()) {
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                viewModel.clearFriendActionMessage()
+            }
+        }
     }
 
-    private fun bindProfileHeader() {
-        val user = FirebaseAuth.getInstance().currentUser
-        val displayName = user?.displayName?.takeIf { it.isNotBlank() } ?: "Name"
-        val emailPrefix = user?.email?.substringBefore("@")?.takeIf { it.isNotBlank() } ?: "username"
-        binding.profileNameText.text = displayName
-        binding.profileUsernameText.text = "@$emailPrefix"
+    private fun bindProfileHeader(profile: UserProfileSummary?) {
+        val summary = profile ?: return
+        binding.profileNameText.text = summary.displayName
+        binding.profileUsernameText.text = "@${summary.username.ifBlank { summary.email.substringBefore("@") }}"
+        binding.profileFriendCountText.text = "${summary.friendCount} friends"
+        binding.profileActivityHeaderText.text = if (isOwnProfile) "Your Activity" else "Recent Activity"
+        binding.profileAddFriendButton.visibility = if (isOwnProfile) View.GONE else View.VISIBLE
+        binding.profileAddFriendButton.text = friendButtonLabel(summary.friendshipStatus)
+        binding.profileAddFriendButton.isEnabled =
+            summary.friendshipStatus == FriendshipStatus.NONE ||
+                summary.friendshipStatus == FriendshipStatus.REQUESTED
+        binding.profileMenuButton.setImageResource(
+            if (isOwnProfile) R.drawable.menu_24dp_000000_fill0_wght400_grad0_opsz24
+            else android.R.drawable.ic_media_previous
+        )
+        binding.profileAvatarImage.isEnabled = isOwnProfile
+        binding.profileFriendCountText.isClickable = isOwnProfile
+        binding.profileFriendCountText.isFocusable = isOwnProfile
     }
 
     private fun uploadProfileImage(uri: Uri) {
@@ -108,20 +152,20 @@ class ProfileFragment : Fragment() {
                 Toast.makeText(requireContext(), "Could not read selected image", Toast.LENGTH_LONG).show()
                 _binding?.profileAvatarImage?.isEnabled = true
                 _binding?.profileAvatarImage?.alpha = 1f
-                loadProfileImageFromCloud()
+                loadProfileImageFromCloud(viewedUid)
                 return@launch
             }
 
             authRepository.uploadProfilePhoto(compressed).onSuccess {
                 Toast.makeText(requireContext(), "Profile picture updated", Toast.LENGTH_SHORT).show()
-                loadProfileImageFromCloud()
+                loadProfileImageFromCloud(viewedUid)
             }.onFailure { error ->
                 Toast.makeText(
                     requireContext(),
                     error.localizedMessage ?: "Failed to upload profile picture",
                     Toast.LENGTH_LONG
                 ).show()
-                loadProfileImageFromCloud()
+                loadProfileImageFromCloud(viewedUid)
             }
             _binding?.profileAvatarImage?.isEnabled = true
             _binding?.profileAvatarImage?.alpha = 1f
@@ -163,10 +207,10 @@ class ProfileFragment : Fragment() {
         return output.toByteArray()
     }
 
-    private fun loadProfileImageFromCloud() {
+    private fun loadProfileImageFromCloud(uid: String?) {
         lifecycleScope.launch {
             if (!isAdded) return@launch
-            authRepository.getProfilePhotoBytes().onSuccess { bytes ->
+            authRepository.getProfilePhotoBytes(uid).onSuccess { bytes ->
                 if (bytes == null) {
                     _binding?.profileAvatarImage?.setImageResource(R.drawable.ic_profile_black_24dp)
                     return@onSuccess
@@ -186,9 +230,9 @@ class ProfileFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "ProfileFragment onResume")
-        bindProfileHeader()
-        loadProfileImageFromCloud()
-        viewModel.loadRankings(FirebaseAuth.getInstance().currentUser?.uid)
+        viewModel.loadProfile(viewedUid, currentUid)
+        loadProfileImageFromCloud(viewedUid)
+        viewModel.loadRankings(viewedUid, allowSeed = isOwnProfile)
     }
 
     override fun onPause() {
@@ -206,5 +250,15 @@ class ProfileFragment : Fragment() {
     override fun onDestroy() {
         Log.d(TAG, "ProfileFragment onDestroy")
         super.onDestroy()
+    }
+
+    private fun friendButtonLabel(status: FriendshipStatus): String {
+        return when (status) {
+            FriendshipStatus.NONE -> "Add Friend"
+            FriendshipStatus.REQUESTED -> "Requested"
+            FriendshipStatus.RECEIVED -> "Requested You"
+            FriendshipStatus.FRIENDS -> "Friends"
+            FriendshipStatus.SELF -> ""
+        }
     }
 }

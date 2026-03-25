@@ -4,6 +4,7 @@ import android.util.Base64
 import com.example.meli.model.User
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,11 +17,26 @@ class AuthRepository {
 
     fun getCurrentUser() = auth.currentUser
 
-    suspend fun register(email: String, pass: String): Result<Unit> {
+    suspend fun register(email: String, pass: String, displayName: String = ""): Result<Unit> {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, pass).await()
             val firebaseUser = result.user ?: throw Exception("User creation failed")
-            val user = User(firebaseUser.uid, email, Timestamp.now())
+            val normalizedName = displayName.trim()
+            if (normalizedName.isNotBlank()) {
+                val profileUpdates = UserProfileChangeRequest.Builder()
+                    .setDisplayName(normalizedName)
+                    .build()
+                firebaseUser.updateProfile(profileUpdates).await()
+            }
+            val username = email.substringBefore("@")
+            val savedDisplayName = normalizedName.ifBlank { firebaseUser.displayName.orEmpty() }
+            val user = User(
+                uid = firebaseUser.uid,
+                email = email,
+                displayName = savedDisplayName,
+                username = username,
+                createdAt = Timestamp.now()
+            )
             firestore.collection("users").document(user.uid).set(user).await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -30,7 +46,8 @@ class AuthRepository {
 
     suspend fun login(email: String, pass: String): Result<Unit> {
         return try {
-            auth.signInWithEmailAndPassword(email, pass).await()
+            val result = auth.signInWithEmailAndPassword(email, pass).await()
+            result.user?.let { syncUserProfileToFirestore(it) }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -44,6 +61,10 @@ class AuthRepository {
                 .setDisplayName(newName)
                 .build()
             user.updateProfile(profileUpdates).await()
+            firestore.collection("users")
+                .document(user.uid)
+                .set(mapOf("displayName" to newName), SetOptions.merge())
+                .await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -54,7 +75,16 @@ class AuthRepository {
         return try {
             val user = auth.currentUser ?: throw Exception("No signed-in user")
             user.updateEmail(newEmail).await()
-            firestore.collection("users").document(user.uid).update("email", newEmail).await()
+            firestore.collection("users")
+                .document(user.uid)
+                .set(
+                    mapOf(
+                        "email" to newEmail,
+                        "username" to newEmail.substringBefore("@")
+                    ),
+                    SetOptions.merge()
+                )
+                .await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -87,10 +117,10 @@ class AuthRepository {
         }
     }
 
-    suspend fun getProfilePhotoBytes(): Result<ByteArray?> {
+    suspend fun getProfilePhotoBytes(uid: String? = auth.currentUser?.uid): Result<ByteArray?> {
         return try {
-            val user = auth.currentUser ?: return Result.success(null)
-            val userDoc = firestore.collection("users").document(user.uid).get().await()
+            val resolvedUid = uid ?: return Result.success(null)
+            val userDoc = firestore.collection("users").document(resolvedUid).get().await()
             val encoded = userDoc.getString("profileImageBase64")
             if (encoded.isNullOrBlank()) {
                 return Result.success(null)
@@ -139,4 +169,24 @@ class AuthRepository {
     }
 
     fun logout() = auth.signOut()
+
+    private suspend fun syncUserProfileToFirestore(user: FirebaseUser) {
+        val email = user.email.orEmpty()
+        val username = email.substringBefore("@").takeIf { it.isNotBlank() }.orEmpty()
+        val displayName = user.displayName.orEmpty()
+
+        firestore.collection("users")
+            .document(user.uid)
+            .set(
+                mapOf(
+                    "uid" to user.uid,
+                    "email" to email,
+                    "displayName" to displayName,
+                    "username" to username,
+                    "createdAt" to Timestamp.now()
+                ),
+                SetOptions.merge()
+            )
+            .await()
+    }
 }

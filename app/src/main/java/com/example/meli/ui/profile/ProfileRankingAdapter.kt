@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.meli.databinding.ItemProfileRankingBinding
 import com.example.meli.model.ProfileRankingActivity
+import com.google.firebase.auth.FirebaseAuth
 import java.util.Locale
 
 class ProfileRankingAdapter :
@@ -30,9 +31,17 @@ class ProfileRankingAdapter :
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: ProfileRankingActivity) {
+            val currentUid = FirebaseAuth.getInstance().currentUser?.uid
+            val actorLabel = if (item.actorUid == currentUid) {
+                "You ranked"
+            } else {
+                "${item.actorName} ranked"
+            }
+
             binding.rankingTrackTitle.text = item.trackTitle
             binding.rankingArtistsText.text = item.artistText.ifBlank { "Unknown artist" }
             binding.rankingListNameText.text = item.listName?.takeIf { it.isNotBlank() } ?: "Ranking"
+            binding.rankingActorText.text = actorLabel
             binding.rankingScoreText.text = item.rankingScore?.let {
                 String.format(Locale.US, "%.1f", it)
             } ?: "--"
