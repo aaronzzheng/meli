@@ -1,8 +1,9 @@
 package com.example.meli.ui.search
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.meli.data.repository.SocialRepository
 import com.example.meli.data.repository.UserSearchRepository
@@ -12,7 +13,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class SearchViewModel : ViewModel() {
+class SearchViewModel(application: Application) : AndroidViewModel(application) {
 
     enum class SearchMode {
         SONGS,
@@ -23,7 +24,7 @@ class SearchViewModel : ViewModel() {
     private val socialRepository = SocialRepository()
     private var searchJob: Job? = null
 
-    private val _mode = MutableLiveData(SearchMode.MEMBERS)
+    private val _mode = MutableLiveData(SearchMode.SONGS)
     val mode: LiveData<SearchMode> = _mode
 
     private val _searchResults = MutableLiveData<List<UserSearchResult>>(emptyList())

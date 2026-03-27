@@ -11,10 +11,13 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.meli.R
 import com.example.meli.databinding.FragmentSearchBinding
 import com.example.meli.model.FriendshipStatus
+import com.example.meli.spotify.SpotifyPlaylist
+import com.example.meli.spotify.SpotifyTrack
 import com.example.meli.ui.home.HomeUserSearchAdapter
 import com.google.firebase.auth.FirebaseAuth
 
@@ -26,6 +29,7 @@ class SearchFragment : Fragment() {
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
     private val viewModel: SearchViewModel by viewModels()
+    private val spotifyViewModel: SpotifyLibraryViewModel by viewModels()
     private val userSearchAdapter = HomeUserSearchAdapter(
         onUserClicked = { user ->
             findNavController().navigate(
@@ -43,6 +47,15 @@ class SearchFragment : Fragment() {
             }
         }
     )
+    private val recentTracksAdapter = SpotifyTrackGridAdapter(
+        onCoverClicked = { track -> openTrackDetail(track) },
+        onAddClicked = {
+            Toast.makeText(requireContext(), "Ranking integration coming soon", Toast.LENGTH_SHORT).show()
+        }
+    )
+    private val playlistsAdapter = SpotifyPlaylistGridAdapter(
+        onCoverClicked = { playlist -> openPlaylistDetail(playlist) }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,28 +71,43 @@ class SearchFragment : Fragment() {
         _binding = FragmentSearchBinding.inflate(inflater, container, false)
         binding.searchResultsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.searchResultsRecyclerView.adapter = userSearchAdapter
+        binding.recentlyPlayedRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.recentlyPlayedRecyclerView.adapter = recentTracksAdapter
+        binding.playlistsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.playlistsRecyclerView.adapter = playlistsAdapter
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         observeSearch()
+        observeSpotify()
 
         binding.membersTab.setOnClickListener {
             viewModel.setMode(SearchViewModel.SearchMode.MEMBERS)
         }
         binding.songsTab.setOnClickListener {
             viewModel.setMode(SearchViewModel.SearchMode.SONGS)
+            spotifyViewModel.refreshSpotifyData()
         }
         binding.searchEditText.doAfterTextChanged { text ->
-            viewModel.searchUsers(
-                query = text?.toString().orEmpty(),
-                currentUid = FirebaseAuth.getInstance().currentUser?.uid
-            )
+            if (viewModel.mode.value == SearchViewModel.SearchMode.MEMBERS) {
+                viewModel.searchUsers(
+                    query = text?.toString().orEmpty(),
+                    currentUid = FirebaseAuth.getInstance().currentUser?.uid
+                )
+            }
             renderSearchState()
         }
+        binding.recentlyPlayedMoreText.setOnClickListener {
+            findNavController().navigate(R.id.action_navigation_search_to_recentTracksFragment)
+        }
+        binding.playlistsMoreText.setOnClickListener {
+            findNavController().navigate(R.id.action_navigation_search_to_playlistsFragment)
+        }
 
-        viewModel.setMode(SearchViewModel.SearchMode.MEMBERS)
+        viewModel.setMode(SearchViewModel.SearchMode.SONGS)
+        spotifyViewModel.refreshSpotifyData()
     }
 
     private fun observeSearch() {
@@ -120,6 +148,27 @@ class SearchFragment : Fragment() {
         }
     }
 
+    private fun observeSpotify() {
+        spotifyViewModel.spotifyState.observe(viewLifecycleOwner) { state ->
+            val userData = state.userData
+            recentTracksAdapter.submitList(
+                userData?.recentlyPlayed
+                    ?.distinctBy { it.id.ifBlank { "${it.name}-${it.artistNames.joinToString(",")}" } }
+                    ?.take(4)
+                    .orEmpty()
+            )
+            playlistsAdapter.submitList(userData?.playlists?.take(4).orEmpty())
+            binding.songPlaceholderText.text = state.errorMessage ?: getString(R.string.spotify_not_connected)
+            binding.songPlaceholderCard.visibility =
+                if (state.isConnected) View.GONE else View.VISIBLE
+            binding.recentlyPlayedSection.visibility =
+                if (state.isConnected && !userData?.recentlyPlayed.isNullOrEmpty()) View.VISIBLE else View.GONE
+            binding.playlistsSection.visibility =
+                if (state.isConnected && !userData?.playlists.isNullOrEmpty()) View.VISIBLE else View.GONE
+            renderSearchState()
+        }
+    }
+
     private fun renderSearchState() {
         val query = binding.searchEditText.text?.toString().orEmpty().trim()
         val mode = viewModel.mode.value ?: SearchViewModel.SearchMode.MEMBERS
@@ -127,18 +176,22 @@ class SearchFragment : Fragment() {
         val hasResults = viewModel.searchResults.value?.isNotEmpty() == true
         val isLoading = viewModel.searchLoading.value == true
         val isMembers = mode == SearchViewModel.SearchMode.MEMBERS
+        val isSpotifyConnected = spotifyViewModel.spotifyState.value?.isConnected == true
+        val hasSpotifyContent = !spotifyViewModel.spotifyState.value?.userData?.recentlyPlayed.isNullOrEmpty() ||
+            !spotifyViewModel.spotifyState.value?.userData?.playlists.isNullOrEmpty()
 
         binding.searchResultsRecyclerView.visibility =
             if (isMembers && shouldShowResults && hasResults) View.VISIBLE else View.GONE
         binding.searchEmptyText.visibility =
             if (isMembers && shouldShowResults && !hasResults && !isLoading) View.VISIBLE else View.GONE
 
-        binding.songPlaceholderCard.visibility =
-            if (!isMembers && shouldShowResults) View.VISIBLE else View.GONE
-        binding.songPlaceholderText.text = if (query.length < 2) {
-            "Search for songs once Spotify search is connected."
-        } else {
-            "Song results for \"$query\" will appear here once Spotify search is connected."
+        binding.songContentScrollView.visibility = if (isMembers) View.GONE else View.VISIBLE
+        if (!isMembers && !isSpotifyConnected) {
+            binding.songPlaceholderCard.visibility = View.VISIBLE
+            binding.songPlaceholderText.text = getString(R.string.spotify_not_connected)
+        } else if (!isMembers && !hasSpotifyContent) {
+            binding.songPlaceholderCard.visibility = View.VISIBLE
+            binding.songPlaceholderText.text = getString(R.string.spotify_no_recent_tracks)
         }
     }
 
@@ -146,11 +199,41 @@ class SearchFragment : Fragment() {
         Log.d(TAG, "SearchFragment onDestroy")
         super.onDestroyView()
         binding.searchResultsRecyclerView.adapter = null
+        binding.recentlyPlayedRecyclerView.adapter = null
+        binding.playlistsRecyclerView.adapter = null
         _binding = null
     }
 
     override fun onDestroy() {
         Log.d(TAG, "SearchFragment onDestroy")
         super.onDestroy()
+    }
+
+    private fun openTrackDetail(track: SpotifyTrack) {
+        findNavController().navigate(
+            R.id.trackDetailFragment,
+            bundleOf(
+                ARG_TRACK_ID to track.id,
+                ARG_TRACK_NAME to track.name,
+                ARG_TRACK_ARTISTS to track.artistNames.joinToString(", "),
+                ARG_TRACK_ALBUM to track.albumName,
+                ARG_TRACK_IMAGE_URL to track.imageUrl
+            )
+        )
+    }
+
+    private fun openPlaylistDetail(playlist: SpotifyPlaylist) {
+        findNavController().navigate(
+            R.id.playlistDetailFragment,
+            bundleOf(
+                ARG_PLAYLIST_ID to playlist.id,
+                ARG_PLAYLIST_NAME to playlist.name,
+                ARG_PLAYLIST_IMAGE_URL to playlist.imageUrl.orEmpty(),
+                ARG_PLAYLIST_OWNER_ID to playlist.ownerId.orEmpty(),
+                ARG_PLAYLIST_OWNER to playlist.ownerName.orEmpty(),
+                ARG_PLAYLIST_DESCRIPTION to playlist.description.orEmpty(),
+                ARG_PLAYLIST_TRACK_COUNT to playlist.totalTracks
+            )
+        )
     }
 }

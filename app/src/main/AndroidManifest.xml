@@ -27,6 +27,23 @@
         <activity
             android:name=".ui.login.LoginActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".spotify.SpotifyAuthCallbackActivity"
+            android:exported="true"
+            android:noHistory="true"
+            android:theme="@style/Theme.Meli">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="callback"
+                    android:scheme="meli" />
+            </intent-filter>
+        </activity>
         <activity android:name=".ui.notes.NotesActivity" />
             
     </application>

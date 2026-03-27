@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/meli_paper"
+    android:padding="@dimen/meli_screen_padding">
+
+    <ImageButton
+        android:id="@+id/buttonBackPlaylistDetail"
+        style="@style/Widget.Meli.IconButton"
+        android:contentDescription="@string/cd_close_settings"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/ic_media_previous" />
+
+    <ImageView
+        android:id="@+id/playlistDetailCoverImage"
+        android:layout_width="124dp"
+        android:layout_height="124dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_profile_album_placeholder"
+        android:scaleType="centerCrop"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/buttonBackPlaylistDetail" />
+
+    <TextView
+        android:id="@+id/playlistDetailTitleText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:textAppearance="@style/TextAppearance.Meli.ScreenTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/playlistDetailCoverImage"
+        app:layout_constraintTop_toTopOf="@id/playlistDetailCoverImage" />
+
+    <TextView
+        android:id="@+id/playlistDetailOwnerText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:textAppearance="@style/TextAppearance.Meli.SectionTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/playlistDetailCoverImage"
+        app:layout_constraintTop_toBottomOf="@id/playlistDetailTitleText" />
+
+    <TextView
+        android:id="@+id/playlistDetailMetaText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="6dp"
+        android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/playlistDetailCoverImage"
+        app:layout_constraintTop_toBottomOf="@id/playlistDetailOwnerText" />
+
+    <TextView
+        android:id="@+id/playlistDetailDescriptionText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="6dp"
+        android:maxLines="3"
+        android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/playlistDetailCoverImage"
+        app:layout_constraintTop_toBottomOf="@id/playlistDetailMetaText" />
+
+    <TextView
+        android:id="@+id/playlistTracksEmptyText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="@string/spotify_no_playlist_tracks"
+        android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/playlistDetailCoverImage" />
+
+    <Button
+        android:id="@+id/buttonOpenPlaylistInSpotify"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/spotify_open_in_spotify"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/playlistTracksEmptyText" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/playlistTracksRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="18dp"
+        android:clipToPadding="false"
+        android:paddingBottom="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/buttonOpenPlaylistInSpotify" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

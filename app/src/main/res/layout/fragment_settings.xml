@@ -111,12 +111,28 @@
                 android:src="@android:drawable/ic_menu_upload"
                 app:tint="@android:color/black" />
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
-                android:text="Import Songs"
-                android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/import_option_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/spotify_connect_title"
+                    android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
+
+                <TextView
+                    android:id="@+id/import_status_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/spotify_status_disconnected"
+                    android:textAppearance="@style/TextAppearance.Meli.BodyMuted" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 

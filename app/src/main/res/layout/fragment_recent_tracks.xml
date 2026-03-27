@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/meli_paper"
+    android:padding="@dimen/meli_screen_padding">
+
+    <ImageButton
+        android:id="@+id/buttonBackRecentTracks"
+        style="@style/Widget.Meli.IconButton"
+        android:contentDescription="@string/cd_close_settings"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/ic_media_previous" />
+
+    <TextView
+        android:id="@+id/recentTracksTitleText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:text="@string/spotify_recently_played"
+        android:textAppearance="@style/TextAppearance.Meli.ScreenTitle"
+        app:layout_constraintBottom_toBottomOf="@id/buttonBackRecentTracks"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/buttonBackRecentTracks"
+        app:layout_constraintTop_toTopOf="@id/buttonBackRecentTracks" />
+
+    <TextView
+        android:id="@+id/recentTracksEmptyText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="@string/spotify_no_recent_tracks"
+        android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/buttonBackRecentTracks" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recentTracksRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="18dp"
+        android:clipToPadding="false"
+        android:paddingBottom="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/buttonBackRecentTracks" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
