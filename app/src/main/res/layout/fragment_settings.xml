@@ -54,7 +54,7 @@
                 android:layout_height="36dp"
                 android:contentDescription="Settings"
                 android:src="@android:drawable/ic_menu_manage"
-                app:tint="@android:color/black" />
+                app:tint="@color/meli_ink" />
 
             <TextView
                 android:id="@+id/settings_option_text"
@@ -82,7 +82,7 @@
                 android:layout_height="36dp"
                 android:contentDescription="FAQ"
                 android:src="@android:drawable/ic_menu_help"
-                app:tint="@android:color/black" />
+                app:tint="@color/meli_ink" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -109,7 +109,7 @@
                 android:layout_height="36dp"
                 android:contentDescription="Import songs"
                 android:src="@android:drawable/ic_menu_upload"
-                app:tint="@android:color/black" />
+                app:tint="@color/meli_ink" />
 
             <LinearLayout
                 android:layout_width="0dp"

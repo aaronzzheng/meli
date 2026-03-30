@@ -1,27 +1,55 @@
 package com.example.meli
 
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.meli.databinding.ActivityMainBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 private const val TAG = "MeliLifecycle"
+private const val DARK_MODE_LIGHT_THRESHOLD_LUX = 10f
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var sensorManager: SensorManager
+    private var lightSensor: Sensor? = null
+    private val lightSensorListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent) {
+            val lightLevel = event.values.firstOrNull() ?: return
+            val desiredNightMode = if (lightLevel < DARK_MODE_LIGHT_THRESHOLD_LUX) {
+                AppCompatDelegate.MODE_NIGHT_YES
+            } else {
+                AppCompatDelegate.MODE_NIGHT_NO
+            }
+
+            if (AppCompatDelegate.getDefaultNightMode() != desiredNightMode) {
+                Log.d(TAG, "Ambient light changed to $lightLevel lux, applying mode=$desiredNightMode")
+                AppCompatDelegate.setDefaultNightMode(desiredNightMode)
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "MainActivity onCreate")
+
+        sensorManager = getSystemService(SensorManager::class.java)
+        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -80,5 +108,21 @@ class MainActivity : AppCompatActivity() {
             }
             updateBottomNavVisibility()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lightSensor?.let { sensor ->
+            sensorManager.registerListener(
+                lightSensorListener,
+                sensor,
+                SensorManager.SENSOR_DELAY_NORMAL
+            )
+        }
+    }
+
+    override fun onPause() {
+        sensorManager.unregisterListener(lightSensorListener)
+        super.onPause()
     }
 }

@@ -24,7 +24,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:text=":)"
-                android:textColor="@android:color/black"
+                android:textColor="@color/meli_ink"
                 android:textSize="16sp" />
         </FrameLayout>
 
@@ -39,7 +39,7 @@
                 android:id="@+id/rankingActorText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/black"
+                android:textColor="@color/meli_ink"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
@@ -86,7 +86,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="Notes:"
-        android:textColor="@android:color/black"
+        android:textColor="@color/meli_ink"
         android:textSize="16sp"
         android:textStyle="bold"
         android:visibility="gone" />
@@ -96,7 +96,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textColor="@android:color/black"
+        android:textColor="@color/meli_ink"
         android:textSize="16sp"
         android:visibility="gone" />
 

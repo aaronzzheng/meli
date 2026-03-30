@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="meli_ink">#F7F3ED</color>
+    <color name="meli_paper">#121212</color>
+    <color name="meli_surface">#1B1B1B</color>
+    <color name="meli_surface_subtle">#252525</color>
+    <color name="meli_line">#F7F3ED</color>
+    <color name="meli_line_soft">#4A4640</color>
+    <color name="meli_text_muted">#C2BBB2</color>
+    <color name="meli_green">#69B59B</color>
+    <color name="meli_amber">#E5B454</color>
+    <color name="meli_green_soft">#1C312A</color>
+    <color name="meli_red">#E07A72</color>
+    <color name="meli_red_soft">#3C1F1C</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
