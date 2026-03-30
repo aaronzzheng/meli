@@ -15,6 +15,7 @@ import com.example.meli.spotify.SpotifyPlaylistDetails
 import com.example.meli.spotify.SpotifyPkceUtils
 import com.example.meli.spotify.SpotifyTokens
 import com.example.meli.spotify.SpotifyUserData
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -25,6 +26,7 @@ class SpotifyRepository private constructor(context: Context) {
     private val appContext = context.applicationContext
     private val authStore = SpotifyAuthStore(appContext)
     private val apiClient = SpotifyApiClient()
+    private val firebaseAuth = FirebaseAuth.getInstance()
 
     private val _connectionState = MutableLiveData(initialState())
     val connectionState: LiveData<SpotifyConnectionState> = _connectionState
@@ -100,6 +102,7 @@ class SpotifyRepository private constructor(context: Context) {
                 apiClient.exchangeCodeForTokens(code, codeVerifier)
             }
             authStore.saveTokens(tokens)
+            authStore.saveOwnerUid(firebaseAuth.currentUser?.uid)
             authStore.clearPendingAuthorization()
             withContext(Dispatchers.IO) {
                 syncSpotifyData()
@@ -123,6 +126,7 @@ class SpotifyRepository private constructor(context: Context) {
     }
 
     suspend fun refreshSpotifyData(): Result<SpotifyUserData> {
+        clearIfOwnerChanged()
         val currentState = _connectionState.value ?: initialState()
         val tokens = authStore.getTokens()
         if (tokens == null) {
@@ -219,6 +223,16 @@ class SpotifyRepository private constructor(context: Context) {
         }
     }
 
+    suspend fun searchTracks(query: String): Result<List<com.example.meli.spotify.SpotifyTrack>> {
+        return runCatching {
+            withContext(Dispatchers.IO) {
+                clearIfOwnerChanged()
+                val validToken = ensureValidAccessToken(authStore.getTokens())
+                apiClient.searchTracks(validToken.accessToken, query)
+            }
+        }
+    }
+
     private fun buildPlaylistAccessErrorMessage(
         playlistId: String,
         currentUserId: String,
@@ -243,6 +257,7 @@ class SpotifyRepository private constructor(context: Context) {
     private fun syncSpotifyData(): SpotifyUserData = syncSpotifyData(authStore.getTokens())
 
     private fun syncSpotifyData(tokens: SpotifyTokens?): SpotifyUserData {
+        clearIfOwnerChanged()
         val validToken = ensureValidAccessToken(tokens)
         val profile = apiClient.fetchCurrentUserProfile(validToken.accessToken)
         val playlists = apiClient.fetchPlaylists(validToken.accessToken)
@@ -274,6 +289,7 @@ class SpotifyRepository private constructor(context: Context) {
     }
 
     private fun ensureValidAccessToken(tokens: SpotifyTokens?): SpotifyTokens {
+        clearIfOwnerChanged()
         val existingTokens = tokens ?: throw IllegalStateException("Spotify is not connected")
         if (existingTokens.expiresAtMillis > System.currentTimeMillis() + TOKEN_EXPIRY_BUFFER_MS) {
             return existingTokens
@@ -289,10 +305,18 @@ class SpotifyRepository private constructor(context: Context) {
             refreshedTokens
         }
         authStore.saveTokens(resolvedTokens)
+        authStore.saveOwnerUid(firebaseAuth.currentUser?.uid)
         return resolvedTokens
     }
 
     private fun initialState(): SpotifyConnectionState {
+        val currentUid = firebaseAuth.currentUser?.uid
+        val ownerUid = authStore.getOwnerUid()
+        if (ownerUid != currentUid) {
+            authStore.clearTokens()
+            authStore.clearPendingAuthorization()
+        }
+
         return if (authStore.getTokens() == null) {
             SpotifyConnectionState()
         } else {
@@ -305,6 +329,19 @@ class SpotifyRepository private constructor(context: Context) {
 
     private fun updateState(state: SpotifyConnectionState) {
         _connectionState.postValue(state)
+    }
+
+    private fun clearIfOwnerChanged() {
+        val currentUid = firebaseAuth.currentUser?.uid
+        val ownerUid = authStore.getOwnerUid()
+        if (ownerUid == currentUid) return
+
+        if (ownerUid != null || authStore.getTokens() != null) {
+            authStore.clearTokens()
+            authStore.clearPendingAuthorization()
+            updateState(SpotifyConnectionState())
+            Log.d(TAG, "Cleared Spotify session because Firebase user changed from $ownerUid to $currentUid")
+        }
     }
 
     companion object {

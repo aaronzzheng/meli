@@ -15,6 +15,13 @@ class SpotifyTrackGridAdapter(
     private val onAddClicked: (SpotifyTrack) -> Unit
 ) : ListAdapter<SpotifyTrack, SpotifyTrackGridAdapter.SpotifyTrackViewHolder>(DiffCallback) {
 
+    private var ratedTrackIds: Set<String> = emptySet()
+
+    fun updateRatedTrackIds(trackIds: Set<String>) {
+        ratedTrackIds = trackIds
+        notifyDataSetChanged()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SpotifyTrackViewHolder {
         val binding = ItemSpotifyTrackGridBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -25,7 +32,7 @@ class SpotifyTrackGridAdapter(
     }
 
     override fun onBindViewHolder(holder: SpotifyTrackViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), ratedTrackIds.contains(getItem(position).id))
     }
 
     class SpotifyTrackViewHolder(
@@ -34,7 +41,7 @@ class SpotifyTrackGridAdapter(
         private val onAddClicked: (SpotifyTrack) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: SpotifyTrack) {
+        fun bind(item: SpotifyTrack, isRated: Boolean) {
             binding.spotifyTrackCoverImage.load(item.imageUrl) {
                 crossfade(true)
                 placeholder(R.drawable.bg_profile_album_placeholder)
@@ -43,6 +50,7 @@ class SpotifyTrackGridAdapter(
             binding.spotifyTrackNameText.text = item.name
             binding.spotifyTrackArtistText.text = item.artistNames.joinToString(", ")
             binding.spotifyTrackCoverImage.setOnClickListener { onCoverClicked(item) }
+            binding.spotifyTrackAddButton.visibility = if (isRated) android.view.View.GONE else android.view.View.VISIBLE
             binding.spotifyTrackAddButton.setOnClickListener { onAddClicked(item) }
         }
     }

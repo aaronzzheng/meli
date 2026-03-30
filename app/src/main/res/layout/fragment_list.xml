@@ -1,72 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/meli_paper"
+    android:orientation="vertical"
     android:padding="@dimen/meli_screen_padding"
     tools:context=".ui.list.ListFragment">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/listInputLayout"
-        style="@style/Widget.Meli.TextInputLayout.Outlined"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="@string/list_item_hint"
-        app:layout_constraintEnd_toStartOf="@+id/button_add_item"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <com.google.android.material.textfield.TextInputEditText
-        android:id="@+id/input_list_item"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="text"
-        android:maxLines="1" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_add_item"
-        style="@style/Widget.Meli.PrimaryButton"
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/list_add"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/listInputLayout" />
+        android:text="@string/list_score_header"
+        android:textAppearance="@style/TextAppearance.Meli.SectionTitle"
+        android:textColor="@color/meli_green"
+        android:textSize="18sp" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_update_latest"
-        style="@style/Widget.Meli.OutlinedActionButton"
-        android:layout_width="0dp"
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="8dp"
-        android:text="@string/list_update_latest"
-        app:layout_constraintEnd_toStartOf="@+id/button_delete_latest"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/listInputLayout" />
+        android:layout_marginTop="14dp"
+        app:singleSelection="true">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_delete_latest"
-        style="@style/Widget.Meli.OutlinedActionButton"
-        android:layout_width="0dp"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sortHighestButton"
+            style="@style/Widget.Meli.OutlinedActionButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:checkable="true"
+            android:text="@string/list_sort_highest" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sortLowestButton"
+            style="@style/Widget.Meli.OutlinedActionButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:checkable="true"
+            android:text="@string/list_sort_lowest" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sortRecentButton"
+            style="@style/Widget.Meli.OutlinedActionButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:checkable="true"
+            android:text="@string/list_sort_recent" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <ProgressBar
+        android:id="@+id/listLoading"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="12dp"
-        android:text="@string/list_delete_latest"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/button_update_latest"
-        app:layout_constraintTop_toBottomOf="@id/listInputLayout" />
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:visibility="gone" />
 
     <TextView
-        android:id="@+id/text_list"
-        android:layout_width="0dp"
+        android:id="@+id/emptyListText"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:textColor="@color/meli_ink"
-        android:textAlignment="viewStart"
-        android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/button_update_latest" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:text="@string/list_empty"
+        android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/listRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="1"
+        tools:listitem="@layout/item_track_rating" />
+</LinearLayout>

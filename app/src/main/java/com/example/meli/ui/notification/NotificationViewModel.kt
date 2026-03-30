@@ -39,6 +39,14 @@ class NotificationViewModel : ViewModel() {
         }
     }
 
+    fun markAllRead(uid: String?) {
+        if (uid.isNullOrBlank()) return
+        viewModelScope.launch {
+            repository.markAllAsRead(uid)
+            _notifications.value = _notifications.value.orEmpty().map { it.copy(isRead = true) }
+        }
+    }
+
     fun respondToFriendRequest(uid: String?, notification: AppNotification, accept: Boolean) {
         if (uid.isNullOrBlank()) return
 

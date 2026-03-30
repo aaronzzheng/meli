@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
@@ -49,12 +50,14 @@ class SearchFragment : Fragment() {
     )
     private val recentTracksAdapter = SpotifyTrackGridAdapter(
         onCoverClicked = { track -> openTrackDetail(track) },
-        onAddClicked = {
-            Toast.makeText(requireContext(), "Ranking integration coming soon", Toast.LENGTH_SHORT).show()
-        }
+        onAddClicked = { track -> openTrackRatingOverlay(track) }
     )
     private val playlistsAdapter = SpotifyPlaylistGridAdapter(
         onCoverClicked = { playlist -> openPlaylistDetail(playlist) }
+    )
+    private val songSearchAdapter = SpotifyTrackListAdapter(
+        onTrackClicked = { track -> openTrackDetail(track) },
+        onAddClicked = { track -> openTrackRatingOverlay(track) }
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,6 +85,9 @@ class SearchFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         observeSearch()
         observeSpotify()
+        setFragmentResultListener(TrackRatingDialogFragment.RESULT_KEY) { _, _ ->
+            spotifyViewModel.refreshRatedTrackIds()
+        }
 
         binding.membersTab.setOnClickListener {
             viewModel.setMode(SearchViewModel.SearchMode.MEMBERS)
@@ -96,6 +102,8 @@ class SearchFragment : Fragment() {
                     query = text?.toString().orEmpty(),
                     currentUid = FirebaseAuth.getInstance().currentUser?.uid
                 )
+            } else {
+                spotifyViewModel.searchTracks(text?.toString().orEmpty())
             }
             renderSearchState()
         }
@@ -167,6 +175,27 @@ class SearchFragment : Fragment() {
                 if (state.isConnected && !userData?.playlists.isNullOrEmpty()) View.VISIBLE else View.GONE
             renderSearchState()
         }
+
+        spotifyViewModel.trackSearchResults.observe(viewLifecycleOwner) { tracks ->
+            songSearchAdapter.submitList(tracks)
+            renderSearchState()
+        }
+
+        spotifyViewModel.trackSearchLoading.observe(viewLifecycleOwner) {
+            renderSearchState()
+        }
+
+        spotifyViewModel.trackSearchError.observe(viewLifecycleOwner) { error ->
+            if (viewModel.mode.value == SearchViewModel.SearchMode.SONGS) {
+                binding.searchEmptyText.text = error ?: "No songs found."
+            }
+            renderSearchState()
+        }
+
+        spotifyViewModel.ratedTrackIds.observe(viewLifecycleOwner) { ratedTrackIds ->
+            recentTracksAdapter.updateRatedTrackIds(ratedTrackIds)
+            songSearchAdapter.updateRatedTrackIds(ratedTrackIds)
+        }
     }
 
     private fun renderSearchState() {
@@ -176,20 +205,34 @@ class SearchFragment : Fragment() {
         val hasResults = viewModel.searchResults.value?.isNotEmpty() == true
         val isLoading = viewModel.searchLoading.value == true
         val isMembers = mode == SearchViewModel.SearchMode.MEMBERS
+        val trackSearching = spotifyViewModel.trackSearchLoading.value == true
+        val hasTrackResults = spotifyViewModel.trackSearchResults.value?.isNotEmpty() == true
         val isSpotifyConnected = spotifyViewModel.spotifyState.value?.isConnected == true
         val hasSpotifyContent = !spotifyViewModel.spotifyState.value?.userData?.recentlyPlayed.isNullOrEmpty() ||
             !spotifyViewModel.spotifyState.value?.userData?.playlists.isNullOrEmpty()
 
-        binding.searchResultsRecyclerView.visibility =
-            if (isMembers && shouldShowResults && hasResults) View.VISIBLE else View.GONE
-        binding.searchEmptyText.visibility =
-            if (isMembers && shouldShowResults && !hasResults && !isLoading) View.VISIBLE else View.GONE
+        if (isMembers) {
+            binding.searchResultsRecyclerView.adapter = userSearchAdapter
+            binding.searchResultsRecyclerView.visibility =
+                if (shouldShowResults && hasResults) View.VISIBLE else View.GONE
+            binding.searchEmptyText.visibility =
+                if (shouldShowResults && !hasResults && !isLoading) View.VISIBLE else View.GONE
+            binding.songContentScrollView.visibility = View.GONE
+            return
+        }
 
-        binding.songContentScrollView.visibility = if (isMembers) View.GONE else View.VISIBLE
-        if (!isMembers && !isSpotifyConnected) {
+        val showingSongSearch = shouldShowResults
+        binding.searchResultsRecyclerView.adapter = songSearchAdapter
+        binding.searchResultsRecyclerView.visibility =
+            if (showingSongSearch && hasTrackResults) View.VISIBLE else View.GONE
+        binding.searchEmptyText.visibility =
+            if (showingSongSearch && !hasTrackResults && !trackSearching) View.VISIBLE else View.GONE
+        binding.songContentScrollView.visibility = if (showingSongSearch) View.GONE else View.VISIBLE
+
+        if (!showingSongSearch && !isSpotifyConnected) {
             binding.songPlaceholderCard.visibility = View.VISIBLE
             binding.songPlaceholderText.text = getString(R.string.spotify_not_connected)
-        } else if (!isMembers && !hasSpotifyContent) {
+        } else if (!showingSongSearch && !hasSpotifyContent) {
             binding.songPlaceholderCard.visibility = View.VISIBLE
             binding.songPlaceholderText.text = getString(R.string.spotify_no_recent_tracks)
         }
@@ -220,6 +263,18 @@ class SearchFragment : Fragment() {
                 ARG_TRACK_IMAGE_URL to track.imageUrl
             )
         )
+    }
+
+    private fun openTrackRatingOverlay(track: SpotifyTrack) {
+        TrackRatingDialogFragment.newInstance(
+            bundleOf(
+                ARG_TRACK_ID to track.id,
+                ARG_TRACK_NAME to track.name,
+                ARG_TRACK_ARTISTS to track.artistNames.joinToString(", "),
+                ARG_TRACK_ALBUM to track.albumName,
+                ARG_TRACK_IMAGE_URL to track.imageUrl
+            )
+        ).show(parentFragmentManager, TrackRatingDialogFragment.TAG)
     }
 
     private fun openPlaylistDetail(playlist: SpotifyPlaylist) {

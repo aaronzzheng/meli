@@ -7,9 +7,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,9 +28,7 @@ class PlaylistDetailFragment : Fragment() {
 
     private val trackListAdapter = SpotifyTrackListAdapter(
         onTrackClicked = { track -> openTrackDetail(track) },
-        onAddClicked = {
-            Toast.makeText(requireContext(), "Ranking integration coming soon", Toast.LENGTH_SHORT).show()
-        }
+        onAddClicked = { track -> openTrackRatingOverlay(track) }
     )
 
     override fun onCreateView(
@@ -49,6 +47,9 @@ class PlaylistDetailFragment : Fragment() {
 
         binding.buttonBackPlaylistDetail.setOnClickListener {
             findNavController().navigateUp()
+        }
+        setFragmentResultListener(TrackRatingDialogFragment.RESULT_KEY) { _, _ ->
+            spotifyViewModel.refreshRatedTrackIds()
         }
         binding.buttonOpenPlaylistInSpotify.setOnClickListener {
             openPlaylistInSpotify()
@@ -94,6 +95,11 @@ class PlaylistDetailFragment : Fragment() {
             binding.playlistTracksEmptyText.visibility = View.VISIBLE
         }
 
+        spotifyViewModel.ratedTrackIds.observe(viewLifecycleOwner) { ratedTrackIds ->
+            trackListAdapter.updateRatedTrackIds(ratedTrackIds)
+        }
+
+        spotifyViewModel.refreshRatedTrackIds()
         spotifyViewModel.loadPlaylistDetails(arguments?.getString(ARG_PLAYLIST_ID).orEmpty())
     }
 
@@ -114,6 +120,18 @@ class PlaylistDetailFragment : Fragment() {
                 ARG_TRACK_IMAGE_URL to track.imageUrl
             )
         )
+    }
+
+    private fun openTrackRatingOverlay(track: SpotifyTrack) {
+        TrackRatingDialogFragment.newInstance(
+            bundleOf(
+                ARG_TRACK_ID to track.id,
+                ARG_TRACK_NAME to track.name,
+                ARG_TRACK_ARTISTS to track.artistNames.joinToString(", "),
+                ARG_TRACK_ALBUM to track.albumName,
+                ARG_TRACK_IMAGE_URL to track.imageUrl
+            )
+        ).show(parentFragmentManager, TrackRatingDialogFragment.TAG)
     }
 
     private fun openPlaylistInSpotify() {

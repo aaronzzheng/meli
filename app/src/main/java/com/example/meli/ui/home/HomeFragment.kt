@@ -9,11 +9,14 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.meli.R
 import com.example.meli.databinding.FragmentHomeBinding
+import com.example.meli.model.ProfileRankingActivity
+import com.example.meli.ui.feed.FeedCommentsBottomSheetDialogFragment
 import com.example.meli.ui.profile.ProfileRankingAdapter
 import com.google.firebase.auth.FirebaseAuth
 
@@ -24,7 +27,14 @@ class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val viewModel: HomeViewModel by viewModels()
-    private val rankingAdapter = ProfileRankingAdapter()
+    private val rankingAdapter = ProfileRankingAdapter(
+        onLikeClicked = { activity ->
+            viewModel.toggleLike(activity, FirebaseAuth.getInstance().currentUser?.uid)
+        },
+        onCommentClicked = { activity ->
+            showCommentsDialog(activity)
+        }
+    )
     private val userSearchAdapter = HomeUserSearchAdapter(
         onUserClicked = { user ->
             findNavController().navigate(
@@ -69,6 +79,9 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         observeFeed()
+        setFragmentResultListener(FeedCommentsBottomSheetDialogFragment.RESULT_KEY) { _, _ ->
+            viewModel.loadFeed(FirebaseAuth.getInstance().currentUser?.uid)
+        }
         binding.buttonSettings.setOnClickListener {
             findNavController().navigate(R.id.navigation_home_to_settingsFragment)
         }
@@ -89,6 +102,11 @@ class HomeFragment : Fragment() {
             rankingAdapter.submitList(activities)
             val showEmpty = activities.isEmpty() && viewModel.isLoading.value != true
             binding.homeFeedEmptyText.visibility = if (showEmpty) View.VISIBLE else View.GONE
+        }
+
+        viewModel.notificationCount.observe(viewLifecycleOwner) { count ->
+            binding.notificationBadgeText.visibility = if (count > 0) View.VISIBLE else View.GONE
+            binding.notificationBadgeText.text = count.toString()
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { loading ->
@@ -149,7 +167,9 @@ class HomeFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "HomeFragment onResume")
-        viewModel.loadFeed(FirebaseAuth.getInstance().currentUser?.uid)
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        viewModel.loadFeed(uid)
+        viewModel.refreshNotificationCount(uid)
     }
 
     override fun onPause() {
@@ -168,5 +188,11 @@ class HomeFragment : Fragment() {
     override fun onDestroy() {
         Log.d(TAG, "HomeFragment onDestroy")
         super.onDestroy()
+    }
+
+    private fun showCommentsDialog(activity: ProfileRankingActivity) {
+        FeedCommentsBottomSheetDialogFragment
+            .newInstance(activity)
+            .show(childFragmentManager, "feed_comments")
     }
 }

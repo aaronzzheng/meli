@@ -35,6 +35,14 @@ class SpotifyAuthStore(context: Context) {
             .apply()
     }
 
+    fun saveOwnerUid(uid: String?) {
+        prefs.edit()
+            .putString(KEY_OWNER_UID, uid)
+            .apply()
+    }
+
+    fun getOwnerUid(): String? = prefs.getString(KEY_OWNER_UID, null)
+
     fun getTokens(): SpotifyTokens? {
         val accessToken = prefs.getString(KEY_ACCESS_TOKEN, null) ?: return null
         val expiresAtMillis = prefs.getLong(KEY_EXPIRES_AT, 0L)
@@ -53,6 +61,7 @@ class SpotifyAuthStore(context: Context) {
             .remove(KEY_REFRESH_TOKEN)
             .remove(KEY_EXPIRES_AT)
             .remove(KEY_EXPIRES_IN)
+            .remove(KEY_OWNER_UID)
             .apply()
     }
 
@@ -64,5 +73,6 @@ class SpotifyAuthStore(context: Context) {
         private const val KEY_REFRESH_TOKEN = "refresh_token"
         private const val KEY_EXPIRES_AT = "expires_at"
         private const val KEY_EXPIRES_IN = "expires_in"
+        private const val KEY_OWNER_UID = "owner_uid"
     }
 }

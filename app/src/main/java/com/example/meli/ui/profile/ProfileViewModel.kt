@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.meli.model.FeedComment
 import com.example.meli.data.repository.ProfileRankingRepository
 import com.example.meli.data.repository.SocialRepository
 import com.example.meli.model.FriendshipStatus
@@ -49,7 +50,7 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    fun loadRankings(uid: String?, allowSeed: Boolean = false) {
+    fun loadRankings(uid: String?, viewerUid: String?) {
         if (uid.isNullOrBlank()) {
             _activities.value = emptyList()
             _error.value = null
@@ -60,45 +61,42 @@ class ProfileViewModel : ViewModel() {
         _error.value = null
 
         viewModelScope.launch {
-            repository.loadUserRankings(uid)
+            repository.loadUserRankings(uid, viewerUid)
                 .onSuccess { rankingItems ->
-                    if (rankingItems.isNotEmpty()) {
-                        _activities.value = rankingItems
-                        _error.value = null
-                    } else if (allowSeed) {
-                        repository.seedMockRankingsIfEmpty(uid)
-                            .onSuccess { seedResult ->
-                                if (seedResult.created) {
-                                    repository.loadUserRankings(uid)
-                                        .onSuccess { seededItems ->
-                                            _activities.value = seededItems
-                                            _error.value = null
-                                        }
-                                        .onFailure { reloadError ->
-                                            _activities.value = emptyList()
-                                            _error.value = reloadError.localizedMessage
-                                                ?: "Failed to load seeded rankings."
-                                        }
-                                } else {
-                                    _activities.value = emptyList()
-                                    _error.value = null
-                                }
-                            }
-                            .onFailure { seedError ->
-                                _activities.value = emptyList()
-                                _error.value = seedError.localizedMessage
-                                    ?: "Failed to seed mock rankings."
-                            }
-                    } else {
-                        _activities.value = emptyList()
-                        _error.value = null
-                    }
+                    _activities.value = rankingItems
+                    _error.value = null
                 }
                 .onFailure { throwable ->
                     _activities.value = emptyList()
                     _error.value = throwable.localizedMessage ?: "Failed to load ranking activity."
                 }
             _isLoading.value = false
+        }
+    }
+
+    fun toggleLike(activity: ProfileRankingActivity, currentUid: String?) {
+        if (currentUid.isNullOrBlank()) return
+        viewModelScope.launch {
+            repository.toggleLike(activity, currentUid)
+                .onSuccess { loadRankings(activity.actorUid, currentUid) }
+                .onFailure { throwable ->
+                    _friendActionMessage.value = throwable.localizedMessage ?: "Failed to update like."
+                }
+        }
+    }
+
+    suspend fun loadComments(activity: ProfileRankingActivity): Result<List<FeedComment>> {
+        return repository.loadComments(activity)
+    }
+
+    fun addComment(activity: ProfileRankingActivity, currentUid: String?, text: String) {
+        if (currentUid.isNullOrBlank() || text.isBlank()) return
+        viewModelScope.launch {
+            repository.addComment(activity, currentUid, text)
+                .onSuccess { loadRankings(activity.actorUid, currentUid) }
+                .onFailure { throwable ->
+                    _friendActionMessage.value = throwable.localizedMessage ?: "Failed to add comment."
+                }
         }
     }
 

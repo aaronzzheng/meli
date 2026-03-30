@@ -1,90 +1,105 @@
 package com.example.meli.ui.list
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.meli.R
 import com.example.meli.databinding.FragmentListBinding
+import com.example.meli.model.RankingSortOption
+import com.example.meli.ui.search.ARG_TRACK_ALBUM
+import com.example.meli.ui.search.ARG_TRACK_ARTISTS
+import com.example.meli.ui.search.ARG_TRACK_ID
+import com.example.meli.ui.search.ARG_TRACK_IMAGE_URL
+import com.example.meli.ui.search.ARG_TRACK_NAME
+import com.example.meli.ui.search.TrackRatingDialogFragment
 import com.example.meli.ui.viewmodel.ListViewModel
-
-private const val TAG = "ListLifecycle"
 
 class ListFragment : Fragment() {
 
     private var _binding: FragmentListBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        Log.d(TAG, "ListFragment onCreate")
-    }
+    private lateinit var listViewModel: ListViewModel
+    private lateinit var ratingAdapter: TrackRatingAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.d(TAG, "ListFragment onCreateView")
-        val listViewModel = ViewModelProvider(this)[ListViewModel::class.java]
+        listViewModel = ViewModelProvider(this)[ListViewModel::class.java]
+        ratingAdapter = TrackRatingAdapter(onTrackSelected = { rating ->
+            findNavController().navigate(
+                R.id.trackDetailFragment,
+                Bundle().apply {
+                    putString(ARG_TRACK_ID, rating.trackId)
+                    putString(ARG_TRACK_NAME, rating.trackTitle)
+                    putString(ARG_TRACK_ARTISTS, rating.artistText)
+                    putString(ARG_TRACK_ALBUM, rating.albumTitle.orEmpty())
+                    putString(ARG_TRACK_IMAGE_URL, rating.imageUrl.orEmpty())
+                }
+            )
+        })
 
         _binding = FragmentListBinding.inflate(inflater, container, false)
-        val root: View = binding.root
+        return binding.root
+    }
 
-        val textView: TextView = binding.textList
-        listViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        binding.listRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.listRecyclerView.adapter = ratingAdapter
+        setFragmentResultListener(TrackRatingDialogFragment.RESULT_KEY) { _, _ ->
+            listViewModel.refresh()
         }
 
-        listViewModel.addResult.observe(viewLifecycleOwner) { message ->
+        binding.sortHighestButton.setOnClickListener {
+            listViewModel.setSortOption(RankingSortOption.HIGHEST_RATED)
+        }
+        binding.sortLowestButton.setOnClickListener {
+            listViewModel.setSortOption(RankingSortOption.LOWEST_RATED)
+        }
+        binding.sortRecentButton.setOnClickListener {
+            listViewModel.setSortOption(RankingSortOption.RECENT)
+        }
+
+        listViewModel.ratings.observe(viewLifecycleOwner) { ratings ->
+            ratingAdapter.submitList(ratings)
+            binding.emptyListText.visibility = if (ratings.isEmpty()) View.VISIBLE else View.GONE
+        }
+
+        listViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.listLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+
+        listViewModel.sortOption.observe(viewLifecycleOwner) { sortOption ->
+            binding.sortHighestButton.isChecked = sortOption == RankingSortOption.HIGHEST_RATED
+            binding.sortLowestButton.isChecked = sortOption == RankingSortOption.LOWEST_RATED
+            binding.sortRecentButton.isChecked = sortOption == RankingSortOption.RECENT
+        }
+
+        listViewModel.message.observe(viewLifecycleOwner) { message ->
             if (!message.isNullOrBlank()) {
                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-                if (message.startsWith("Added")) {
-                    binding.inputListItem.text?.clear()
-                }
-                listViewModel.onAddResultConsumed()
+                listViewModel.consumeMessage()
             }
         }
-
-        binding.buttonAddItem.setOnClickListener {
-            listViewModel.addItem(binding.inputListItem.text?.toString().orEmpty())
-        }
-
-        binding.buttonUpdateLatest.setOnClickListener {
-            listViewModel.updateLatestItem(binding.inputListItem.text?.toString().orEmpty())
-        }
-
-        binding.buttonDeleteLatest.setOnClickListener {
-            listViewModel.deleteLatestItem()
-        }
-        return root
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d(TAG, "ListFragment onResume")
-    }
-
-    override fun onPause() {
-        Log.d(TAG, "ListFragment onPause")
-        super.onPause()
     }
 
     override fun onDestroyView() {
-        Log.d(TAG, "ListFragment onDestroy")
         super.onDestroyView()
         _binding = null
     }
 
-    override fun onDestroy() {
-        Log.d(TAG, "ListFragment onDestroy")
-        super.onDestroy()
+    override fun onResume() {
+        super.onResume()
+        listViewModel.refresh()
     }
 }

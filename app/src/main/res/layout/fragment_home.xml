@@ -28,12 +28,32 @@
             android:text="@string/app_name"
             android:textAppearance="@style/TextAppearance.Meli.ScreenTitle" />
 
-        <ImageButton
-            android:id="@+id/notification_button"
-            style="@style/Widget.Meli.IconButton"
-            android:contentDescription="Open notifications"
-            android:padding="6dp"
-            android:src="@drawable/ic_profile_black_24dp" />
+        <FrameLayout
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <ImageButton
+                android:id="@+id/notification_button"
+                style="@style/Widget.Meli.IconButton"
+                android:contentDescription="Open notifications"
+                android:padding="6dp"
+                android:src="@drawable/ic_profile_black_24dp" />
+
+            <TextView
+                android:id="@+id/notificationBadgeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|top"
+                android:layout_marginEnd="-2dp"
+                android:layout_marginTop="-4dp"
+                android:text="0"
+                android:textColor="@color/meli_red"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </FrameLayout>
 
         <ImageButton
             android:id="@+id/button_settings"

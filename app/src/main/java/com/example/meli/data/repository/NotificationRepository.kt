@@ -33,7 +33,8 @@ class NotificationRepository(
                     actorName = doc.getString("actorName").orEmpty().ifBlank { "Someone" },
                     message = doc.getString("message").orEmpty(),
                     createdAtMillis = extractTimestampMillis(doc.get("createdAt")),
-                    status = status
+                    status = status,
+                    isRead = doc.getBoolean("isRead") == true
                 )
             }
 
@@ -62,7 +63,8 @@ class NotificationRepository(
                         actorName = actorName,
                         message = "$actorName wants to add you as a friend!",
                         createdAtMillis = extractTimestampMillis(doc.get("requestedAt")),
-                        status = "PENDING"
+                        status = "PENDING",
+                        isRead = false
                     )
                 }
 
@@ -91,7 +93,8 @@ class NotificationRepository(
                     "actorName" to actorName,
                     "message" to "$actorName wants to add you as a friend!",
                     "createdAt" to Timestamp.now(),
-                    "status" to "PENDING"
+                    "status" to "PENDING",
+                    "isRead" to false
                 ),
                 SetOptions.merge()
             )
@@ -114,7 +117,8 @@ class NotificationRepository(
                     "actorName" to actorName,
                     "message" to "$actorName declined your friend request.",
                     "createdAt" to Timestamp.now(),
-                    "status" to "INFO"
+                    "status" to "INFO",
+                    "isRead" to false
                 ),
                 SetOptions.merge()
             )
@@ -137,7 +141,8 @@ class NotificationRepository(
                     "actorName" to actorName,
                     "message" to "$actorName accepted your friend request.",
                     "createdAt" to Timestamp.now(),
-                    "status" to "INFO"
+                    "status" to "INFO",
+                    "isRead" to false
                 ),
                 SetOptions.merge()
             )
@@ -166,11 +171,97 @@ class NotificationRepository(
                     "type" to "FRIEND_REQUEST",
                     "actorUid" to actorUid,
                     "status" to "CANCELED",
-                    "createdAt" to Timestamp.now()
+                    "createdAt" to Timestamp.now(),
+                    "isRead" to false
                 ),
                 SetOptions.merge()
             )
             .await()
+    }
+
+    suspend fun createFeedLikeNotification(
+        targetUid: String,
+        actorUid: String,
+        actorName: String,
+        trackTitle: String
+    ) {
+        firestore.collection("users")
+            .document(targetUid)
+            .collection("notifications")
+            .document()
+            .set(
+                mapOf(
+                    "type" to "FEED_LIKE",
+                    "actorUid" to actorUid,
+                    "actorName" to actorName,
+                    "message" to "$actorName liked your ranking of $trackTitle.",
+                    "createdAt" to Timestamp.now(),
+                    "status" to "INFO",
+                    "isRead" to false
+                ),
+                SetOptions.merge()
+            )
+            .await()
+    }
+
+    suspend fun createFeedCommentNotification(
+        targetUid: String,
+        actorUid: String,
+        actorName: String,
+        trackTitle: String,
+        commentText: String
+    ) {
+        val preview = commentText.trim().take(60)
+        firestore.collection("users")
+            .document(targetUid)
+            .collection("notifications")
+            .document()
+            .set(
+                mapOf(
+                    "type" to "FEED_COMMENT",
+                    "actorUid" to actorUid,
+                    "actorName" to actorName,
+                    "message" to "$actorName commented on your ranking of $trackTitle: $preview",
+                    "createdAt" to Timestamp.now(),
+                    "status" to "INFO",
+                    "isRead" to false
+                ),
+                SetOptions.merge()
+            )
+            .await()
+    }
+
+    suspend fun loadUnreadCount(uid: String): Result<Int> {
+        return try {
+            val snapshot = firestore.collection("users")
+                .document(uid)
+                .collection("notifications")
+                .whereEqualTo("isRead", false)
+                .get()
+                .await()
+            Result.success(snapshot.size())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun markAllAsRead(uid: String): Result<Unit> {
+        return try {
+            val snapshot = firestore.collection("users")
+                .document(uid)
+                .collection("notifications")
+                .whereEqualTo("isRead", false)
+                .get()
+                .await()
+            firestore.runBatch { batch ->
+                snapshot.documents.forEach { doc ->
+                    batch.update(doc.reference, "isRead", true)
+                }
+            }.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     suspend fun respondToFriendRequest(

@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -20,7 +21,9 @@ import com.example.meli.R
 import com.example.meli.data.repository.AuthRepository
 import com.example.meli.databinding.FragmentProfileBinding
 import com.example.meli.model.FriendshipStatus
+import com.example.meli.model.ProfileRankingActivity
 import com.example.meli.model.UserProfileSummary
+import com.example.meli.ui.feed.FeedCommentsBottomSheetDialogFragment
 import com.google.firebase.auth.FirebaseAuth
 import java.io.ByteArrayOutputStream
 import kotlin.math.max
@@ -35,7 +38,14 @@ class ProfileFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: ProfileViewModel by viewModels()
     private val authRepository = AuthRepository()
-    private val rankingAdapter = ProfileRankingAdapter()
+    private val rankingAdapter = ProfileRankingAdapter(
+        onLikeClicked = { activity ->
+            viewModel.toggleLike(activity, currentUid)
+        },
+        onCommentClicked = { activity ->
+            showCommentsDialog(activity)
+        }
+    )
     private val imagePicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri ?: return@registerForActivityResult
         uploadProfileImage(uri)
@@ -85,9 +95,12 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         observeRankings()
+        setFragmentResultListener(FeedCommentsBottomSheetDialogFragment.RESULT_KEY) { _, _ ->
+            viewModel.loadRankings(viewedUid, currentUid)
+        }
         viewModel.loadProfile(viewedUid, currentUid)
         loadProfileImageFromCloud(viewedUid)
-        viewModel.loadRankings(viewedUid, allowSeed = isOwnProfile)
+        viewModel.loadRankings(viewedUid, currentUid)
     }
 
     private fun observeRankings() {
@@ -232,7 +245,7 @@ class ProfileFragment : Fragment() {
         Log.d(TAG, "ProfileFragment onResume")
         viewModel.loadProfile(viewedUid, currentUid)
         loadProfileImageFromCloud(viewedUid)
-        viewModel.loadRankings(viewedUid, allowSeed = isOwnProfile)
+        viewModel.loadRankings(viewedUid, currentUid)
     }
 
     override fun onPause() {
@@ -260,5 +273,11 @@ class ProfileFragment : Fragment() {
             FriendshipStatus.FRIENDS -> "Friends"
             FriendshipStatus.SELF -> ""
         }
+    }
+
+    private fun showCommentsDialog(activity: ProfileRankingActivity) {
+        FeedCommentsBottomSheetDialogFragment
+            .newInstance(activity)
+            .show(childFragmentManager, "feed_comments")
     }
 }

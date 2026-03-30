@@ -4,9 +4,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.meli.data.repository.NotificationRepository
 import com.example.meli.data.repository.ProfileRankingRepository
 import com.example.meli.data.repository.SocialRepository
 import com.example.meli.data.repository.UserSearchRepository
+import com.example.meli.model.FeedComment
 import com.example.meli.model.FriendshipStatus
 import com.example.meli.model.ProfileRankingActivity
 import com.example.meli.model.UserSearchResult
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
 class HomeViewModel : ViewModel() {
 
     private val repository = ProfileRankingRepository()
+    private val notificationRepository = NotificationRepository()
     private val userSearchRepository = UserSearchRepository()
     private val socialRepository = SocialRepository()
     private var searchJob: Job? = null
@@ -42,6 +45,9 @@ class HomeViewModel : ViewModel() {
     private val _friendActionMessage = MutableLiveData<String?>()
     val friendActionMessage: LiveData<String?> = _friendActionMessage
 
+    private val _notificationCount = MutableLiveData(0)
+    val notificationCount: LiveData<Int> = _notificationCount
+
     fun loadFeed(uid: String?) {
         if (uid.isNullOrBlank()) {
             _activities.value = emptyList()
@@ -55,35 +61,52 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             repository.loadFeedRankings(uid)
                 .onSuccess { feedItems ->
-                    if (feedItems.isNotEmpty()) {
-                        _activities.value = feedItems
-                        _error.value = null
-                    } else {
-                        repository.seedMockRankingsIfEmpty(uid)
-                            .onSuccess {
-                                repository.loadFeedRankings(uid)
-                                    .onSuccess { seededItems ->
-                                        _activities.value = seededItems
-                                        _error.value = null
-                                    }
-                                    .onFailure { reloadError ->
-                                        _activities.value = emptyList()
-                                        _error.value = reloadError.localizedMessage
-                                            ?: "Failed to load feed."
-                                    }
-                            }
-                            .onFailure { seedError ->
-                                _activities.value = emptyList()
-                                _error.value = seedError.localizedMessage
-                                    ?: "Failed to seed feed activity."
-                            }
-                    }
+                    _activities.value = feedItems
+                    _error.value = null
                 }
                 .onFailure { throwable ->
                     _activities.value = emptyList()
                     _error.value = throwable.localizedMessage ?: "Failed to load feed activity."
                 }
             _isLoading.value = false
+        }
+        refreshNotificationCount(uid)
+    }
+
+    fun toggleLike(activity: ProfileRankingActivity, currentUid: String?) {
+        if (currentUid.isNullOrBlank()) return
+        viewModelScope.launch {
+            repository.toggleLike(activity, currentUid)
+                .onSuccess { loadFeed(currentUid) }
+                .onFailure { throwable ->
+                    _friendActionMessage.value = throwable.localizedMessage ?: "Failed to update like."
+                }
+        }
+    }
+
+    suspend fun loadComments(activity: ProfileRankingActivity): Result<List<FeedComment>> {
+        return repository.loadComments(activity)
+    }
+
+    fun addComment(activity: ProfileRankingActivity, currentUid: String?, text: String) {
+        if (currentUid.isNullOrBlank() || text.isBlank()) return
+        viewModelScope.launch {
+            repository.addComment(activity, currentUid, text)
+                .onSuccess { loadFeed(currentUid) }
+                .onFailure { throwable ->
+                    _friendActionMessage.value = throwable.localizedMessage ?: "Failed to add comment."
+                }
+        }
+    }
+
+    fun refreshNotificationCount(uid: String?) {
+        if (uid.isNullOrBlank()) {
+            _notificationCount.value = 0
+            return
+        }
+        viewModelScope.launch {
+            notificationRepository.loadUnreadCount(uid)
+                .onSuccess { _notificationCount.value = it }
         }
     }
 

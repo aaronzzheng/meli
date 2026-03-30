@@ -2,6 +2,7 @@ package com.example.meli.spotify
 
 import android.util.Log
 import okhttp3.FormBody
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
@@ -75,6 +76,62 @@ class SpotifyApiClient(
         return SpotifyJsonParser.parseSavedTracks(json)
     }
 
+    fun searchTracks(accessToken: String, query: String): List<SpotifyTrack> {
+        val sanitizedQuery = query
+            .trim()
+            .replace(Regex("\\s+"), " ")
+            .replace("\n", " ")
+
+        val candidates = listOf(
+            sanitizedQuery,
+            "\"$sanitizedQuery\"",
+            sanitizedQuery.replace(":", " ").replace("/", " ")
+        ).distinct()
+
+        var lastError: SpotifyApiException? = null
+        for (candidate in candidates) {
+            try {
+                val json = executeTrackSearch(accessToken, candidate, includeMarket = true)
+                val items = json.optJSONObject("tracks")?.optJSONArray("items") ?: JSONArray()
+                return SpotifyJsonParser.parseTracksFromItems(items)
+            } catch (error: SpotifyApiException) {
+                lastError = error
+                Log.e(TAG, "Track search failed with market for query='$candidate': ${error.responseBody}")
+                if (error.statusCode != 400) throw error
+            }
+
+            try {
+                val json = executeTrackSearch(accessToken, candidate, includeMarket = false)
+                val items = json.optJSONObject("tracks")?.optJSONArray("items") ?: JSONArray()
+                return SpotifyJsonParser.parseTracksFromItems(items)
+            } catch (error: SpotifyApiException) {
+                lastError = error
+                Log.e(TAG, "Track search failed without market for query='$candidate': ${error.responseBody}")
+                if (error.statusCode != 400) throw error
+            }
+        }
+
+        throw lastError ?: IllegalStateException("Spotify track search failed")
+    }
+
+    private fun executeTrackSearch(
+        accessToken: String,
+        query: String,
+        includeMarket: Boolean
+    ): JSONObject {
+        val urlBuilder = "${SpotifyConfig.apiBaseUrl}/search".toHttpUrl()
+            .newBuilder()
+            .addQueryParameter("type", "track")
+            .addQueryParameter("limit", "10")
+            .addQueryParameter("q", query)
+
+        if (includeMarket) {
+            urlBuilder.addQueryParameter("market", "from_token")
+        }
+
+        return executeApiGet(urlBuilder.build().toString(), accessToken, absoluteUrl = true)
+    }
+
     fun fetchPlaylistTracks(accessToken: String, playlistId: String): List<SpotifyTrack> {
         val json = runCatching {
             executeApiGet(
@@ -140,9 +197,9 @@ class SpotifyApiClient(
         }
     }
 
-    private fun executeApiGet(path: String, accessToken: String): JSONObject {
+    private fun executeApiGet(path: String, accessToken: String, absoluteUrl: Boolean = false): JSONObject {
         val request = Request.Builder()
-            .url("${SpotifyConfig.apiBaseUrl}$path")
+            .url(if (absoluteUrl) path else "${SpotifyConfig.apiBaseUrl}$path")
             .get()
             .header("Authorization", "Bearer $accessToken")
             .build()

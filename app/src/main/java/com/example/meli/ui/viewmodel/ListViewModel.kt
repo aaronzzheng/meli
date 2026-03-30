@@ -3,77 +3,71 @@ package com.example.meli.ui.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.meli.data.repository.FirestoreListStatusRepository
-import com.example.meli.data.repository.ListStatusRepository
+import androidx.lifecycle.viewModelScope
+import com.example.meli.data.repository.TrackRatingRepository
+import com.example.meli.model.RankingSortOption
+import com.example.meli.model.TrackRating
+import kotlinx.coroutines.launch
 
 class ListViewModel : ViewModel() {
 
-    private val repository: ListStatusRepository = FirestoreListStatusRepository()
+    private val repository = TrackRatingRepository()
 
-    private val _text = MutableLiveData("Loading data-store status...")
-    val text: LiveData<String> = _text
-    private val _addResult = MutableLiveData<String>()
-    val addResult: LiveData<String> = _addResult
+    private val _ratings = MutableLiveData<List<TrackRating>>(emptyList())
+    val ratings: LiveData<List<TrackRating>> = _ratings
+
+    private val _sortOption = MutableLiveData(RankingSortOption.HIGHEST_RATED)
+    val sortOption: LiveData<RankingSortOption> = _sortOption
+
+    private val _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _message = MutableLiveData<String?>()
+    val message: LiveData<String?> = _message
 
     init {
         refresh()
     }
 
     fun refresh() {
-        repository.loadStatus { status ->
-            _text.postValue("${status.message}\nLayer source: ${status.source}")
+        val sort = _sortOption.value ?: RankingSortOption.HIGHEST_RATED
+        _isLoading.value = true
+
+        viewModelScope.launch {
+            repository.loadRatings(sort)
+                .onSuccess { loadedRatings ->
+                    _ratings.value = loadedRatings
+                }
+                .onFailure { error ->
+                    _ratings.value = emptyList()
+                    _message.value = error.localizedMessage ?: "Failed to load your rankings."
+                }
+            _isLoading.value = false
         }
     }
 
-    fun addItem(text: String) {
-        val trimmed = text.trim()
-        if (trimmed.isEmpty()) {
-            _addResult.value = "Please enter something first."
-            return
-        }
+    fun setSortOption(sortOption: RankingSortOption) {
+        if (_sortOption.value == sortOption) return
+        _sortOption.value = sortOption
+        refresh()
+    }
 
-        _addResult.value = "Adding..."
-        repository.addListItem(trimmed) { result ->
-            result.onSuccess {
-                _addResult.postValue("Added to Firestore.")
-                refresh()
-            }.onFailure { error ->
-                _addResult.postValue("Add failed: ${error.localizedMessage ?: "Unknown error"}")
-            }
+    fun deleteRating(trackId: String) {
+        _isLoading.value = true
+        viewModelScope.launch {
+            repository.deleteRating(trackId)
+                .onSuccess {
+                    _message.value = "Ranking deleted."
+                    refresh()
+                }
+                .onFailure { error ->
+                    _isLoading.value = false
+                    _message.value = error.localizedMessage ?: "Failed to delete ranking."
+                }
         }
     }
 
-    fun updateLatestItem(text: String) {
-        val trimmed = text.trim()
-        if (trimmed.isEmpty()) {
-            _addResult.value = "Enter text to update the latest item."
-            return
-        }
-
-        _addResult.value = "Updating latest item..."
-        repository.updateLatestListItem(trimmed) { result ->
-            result.onSuccess {
-                _addResult.postValue("Latest item updated.")
-                refresh()
-            }.onFailure { error ->
-                _addResult.postValue("Update failed: ${error.localizedMessage ?: "Unknown error"}")
-            }
-        }
-    }
-
-    fun deleteLatestItem() {
-        _addResult.value = "Deleting latest item..."
-        repository.deleteLatestListItem { result ->
-            result.onSuccess {
-                _addResult.postValue("Latest item deleted.")
-                refresh()
-            }.onFailure { error ->
-                _addResult.postValue("Delete failed: ${error.localizedMessage ?: "Unknown error"}")
-            }
-        }
-    }
-
-    fun onAddResultConsumed() {
-        _addResult.value = ""
+    fun consumeMessage() {
+        _message.value = null
     }
 }

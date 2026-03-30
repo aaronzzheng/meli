@@ -57,7 +57,9 @@ class NotificationFragment : Fragment() {
         binding.buttonCloseNotification.setOnClickListener {
             findNavController().navigateUp()
         }
-        viewModel.loadNotifications(FirebaseAuth.getInstance().currentUser?.uid)
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        viewModel.loadNotifications(uid)
+        viewModel.markAllRead(uid)
     }
 
     private fun observeNotifications() {
@@ -85,7 +87,9 @@ class NotificationFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         Log.d(tagName, "NotificationFragment onResume")
-        viewModel.loadNotifications(FirebaseAuth.getInstance().currentUser?.uid)
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        viewModel.loadNotifications(uid)
+        viewModel.markAllRead(uid)
     }
 
     override fun onPause() {

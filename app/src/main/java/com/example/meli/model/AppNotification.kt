@@ -7,5 +7,6 @@ data class AppNotification(
     val actorName: String,
     val message: String,
     val createdAtMillis: Long,
-    val status: String
+    val status: String,
+    val isRead: Boolean
 )
