@@ -105,6 +105,10 @@
         android:name="com.example.meli.ui.friends.FriendsFragment"
         android:label="Friends"
         tools:layout="@layout/fragment_friends">
+        <argument
+            android:name="profileUid"
+            app:argType="string"
+            android:defaultValue="" />
         <action
             android:id="@+id/action_friendsFragment_to_userProfileFragment"
             app:destination="@id/userProfileFragment" />

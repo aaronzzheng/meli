@@ -35,7 +35,7 @@ class LoginViewModel : ViewModel() {
         }
     }
 
-    fun onActionButtonClicked(email: String, pass: String, name: String = "") {
+    fun onActionButtonClicked(email: String, pass: String, name: String = "", username: String = "") {
         if (email.isBlank() || pass.isBlank()) {
             _errorMessage.value = "Email and password cannot be empty"
             return
@@ -51,7 +51,12 @@ class LoginViewModel : ViewModel() {
                     _isLoading.value = false
                     return@launch
                 }
-                authRepository.register(email, pass, name)
+                if (username.isBlank()) {
+                    _errorMessage.value = "Username cannot be empty"
+                    _isLoading.value = false
+                    return@launch
+                }
+                authRepository.register(email, pass, name, username)
             } else {
                 authRepository.login(email, pass)
             }

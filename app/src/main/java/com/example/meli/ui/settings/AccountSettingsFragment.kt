@@ -37,6 +37,11 @@ class AccountSettingsFragment : Fragment() {
 
         binding.nameInput.setText(currentUser?.displayName.orEmpty())
         binding.emailInput.setText(currentUser?.email.orEmpty())
+        viewLifecycleOwner.lifecycleScope.launch {
+            authRepository.getCurrentUsername().onSuccess { username ->
+                binding.usernameInput.setText(username)
+            }
+        }
 
         binding.buttonBackAccount.setOnClickListener {
             findNavController().navigateUp()
@@ -63,6 +68,18 @@ class AccountSettingsFragment : Fragment() {
             binding.emailInputLayout.error = null
             runUpdate("Email updated") {
                 authRepository.updateEmail(newEmail)
+            }
+        }
+
+        binding.saveUsernameButton.setOnClickListener {
+            val newUsername = binding.usernameInput.text?.toString()?.trim().orEmpty()
+            if (newUsername.isBlank()) {
+                binding.usernameInputLayout.error = "Username cannot be empty"
+                return@setOnClickListener
+            }
+            binding.usernameInputLayout.error = null
+            runUpdate("Username updated") {
+                authRepository.updateUsername(newUsername)
             }
         }
 
@@ -113,6 +130,7 @@ class AccountSettingsFragment : Fragment() {
 
     private fun setLoading(isLoading: Boolean) {
         binding.saveNameButton.isEnabled = !isLoading
+        binding.saveUsernameButton.isEnabled = !isLoading
         binding.saveEmailButton.isEnabled = !isLoading
         binding.savePasswordButton.isEnabled = !isLoading
         binding.deleteAccountButton.isEnabled = !isLoading

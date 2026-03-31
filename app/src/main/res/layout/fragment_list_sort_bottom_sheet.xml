@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/meli_surface"
+    android:orientation="vertical"
+    android:paddingTop="14dp"
+    android:paddingBottom="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingStart="24dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="14dp"
+        android:text="Sort list by"
+        android:textAppearance="@style/TextAppearance.Meli.BodyMuted" />
+
+    <TextView
+        android:id="@+id/sortHighToLowRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:gravity="center"
+        android:minHeight="64dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:text="High-Low"
+        android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
+
+    <TextView
+        android:id="@+id/sortLowToHighRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:gravity="center"
+        android:minHeight="64dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:text="Low-High"
+        android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
+
+    <TextView
+        android:id="@+id/sortRecentRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:gravity="center"
+        android:minHeight="64dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:text="Recent"
+        android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
+
+</LinearLayout>

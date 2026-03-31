@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/meli_surface"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add notes"
+        android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Meli.TextInputLayout.Outlined"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:hint="What stood out?">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/trackNotesEditText"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:gravity="top|start"
+            android:inputType="textMultiLine"
+            android:minLines="4" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/trackNotesSaveButton"
+        style="@style/Widget.Meli.PrimaryButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="Save Notes" />
+
+</LinearLayout>

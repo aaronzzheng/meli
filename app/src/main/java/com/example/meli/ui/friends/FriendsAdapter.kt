@@ -13,6 +13,13 @@ class FriendsAdapter(
     private val onUnfriendClicked: (FriendListItem) -> Unit
 ) : ListAdapter<FriendListItem, FriendsAdapter.FriendViewHolder>(DiffCallback) {
 
+    private var allowUnfriend: Boolean = true
+
+    fun setAllowUnfriend(allow: Boolean) {
+        allowUnfriend = allow
+        notifyDataSetChanged()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FriendViewHolder {
         val binding = ItemFriendBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -22,22 +29,24 @@ class FriendsAdapter(
         return FriendViewHolder(binding, onFriendClicked, onUnfriendClicked)
     }
 
-    override fun onBindViewHolder(holder: FriendViewHolder, position: Int) {
-        holder.bind(getItem(position))
-    }
-
     class FriendViewHolder(
         private val binding: ItemFriendBinding,
         private val onFriendClicked: (FriendListItem) -> Unit,
         private val onUnfriendClicked: (FriendListItem) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: FriendListItem) {
+        fun bind(item: FriendListItem, allowUnfriend: Boolean) {
             binding.friendNameText.text = item.displayName
             binding.friendUsernameText.text =
                 if (item.username.isNotBlank()) "@${item.username}" else item.email
             binding.root.setOnClickListener { onFriendClicked(item) }
+            binding.friendUnfriendButton.visibility =
+                if (allowUnfriend) android.view.View.VISIBLE else android.view.View.GONE
             binding.friendUnfriendButton.setOnClickListener { onUnfriendClicked(item) }
         }
+    }
+
+    override fun onBindViewHolder(holder: FriendViewHolder, position: Int) {
+        holder.bind(getItem(position), allowUnfriend)
     }
 
     private object DiffCallback : DiffUtil.ItemCallback<FriendListItem>() {

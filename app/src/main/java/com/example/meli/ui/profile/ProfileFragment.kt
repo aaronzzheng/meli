@@ -2,7 +2,9 @@ package com.example.meli.ui.profile
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,6 +13,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -48,11 +51,14 @@ class ProfileFragment : Fragment() {
     )
     private val imagePicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri ?: return@registerForActivityResult
-        uploadProfileImage(uri)
+        ProfileImageCropBottomSheetFragment
+            .newInstance(uri)
+            .show(parentFragmentManager, ProfileImageCropBottomSheetFragment.TAG)
     }
     private val currentUid get() = FirebaseAuth.getInstance().currentUser?.uid
     private val viewedUid get() = arguments?.getString(ARG_PROFILE_UID) ?: currentUid
     private val isOwnProfile get() = viewedUid == currentUid
+    private var collapsibleSectionHeight = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -69,9 +75,15 @@ class ProfileFragment : Fragment() {
             }
         }
         binding.profileFriendCountText.setOnClickListener {
-            if (isOwnProfile) {
-                findNavController().navigate(R.id.action_navigation_profile_to_friendsFragment)
+            val actionId = if (isOwnProfile) {
+                R.id.action_navigation_profile_to_friendsFragment
+            } else {
+                R.id.action_userProfileFragment_to_friendsFragment
             }
+            findNavController().navigate(
+                actionId,
+                Bundle().apply { putString("profileUid", viewedUid) }
+            )
         }
         binding.profileAvatarImage.setOnClickListener {
             if (isOwnProfile) {
@@ -87,8 +99,18 @@ class ProfileFragment : Fragment() {
                 else -> Unit
             }
         }
+        binding.profileAcceptFriendButton.setOnClickListener {
+            viewModel.acceptFriendRequest(currentUid, viewedUid)
+        }
+        binding.profileDeclineFriendButton.setOnClickListener {
+            viewModel.declineFriendRequest(currentUid, viewedUid)
+        }
         binding.profileActivityRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.profileActivityRecyclerView.adapter = rankingAdapter
+        binding.profileCollapsibleSection.doOnLayout {
+            collapsibleSectionHeight = it.height
+            updateCollapsedHeader(binding.profileActivityRecyclerView.computeVerticalScrollOffset())
+        }
         return binding.root
     }
 
@@ -98,6 +120,15 @@ class ProfileFragment : Fragment() {
         setFragmentResultListener(FeedCommentsBottomSheetDialogFragment.RESULT_KEY) { _, _ ->
             viewModel.loadRankings(viewedUid, currentUid)
         }
+        setFragmentResultListener(ProfileImageCropBottomSheetFragment.RESULT_KEY) { _, bundle ->
+            val bytes = bundle.getByteArray(ProfileImageCropBottomSheetFragment.ARG_IMAGE_BYTES) ?: return@setFragmentResultListener
+            uploadProfileImage(bytes)
+        }
+        binding.profileActivityRecyclerView.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                updateCollapsedHeader(recyclerView.computeVerticalScrollOffset())
+            }
+        })
         viewModel.loadProfile(viewedUid, currentUid)
         loadProfileImageFromCloud(viewedUid)
         viewModel.loadRankings(viewedUid, currentUid)
@@ -111,7 +142,7 @@ class ProfileFragment : Fragment() {
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { loading ->
-            val showEmpty = !loading && rankingAdapter.currentList.isEmpty()
+            val showEmpty = !loading && viewModel.activities.value.isNullOrEmpty()
             binding.profileActivityEmptyText.visibility = if (showEmpty) View.VISIBLE else View.GONE
         }
 
@@ -139,7 +170,10 @@ class ProfileFragment : Fragment() {
         binding.profileUsernameText.text = "@${summary.username.ifBlank { summary.email.substringBefore("@") }}"
         binding.profileFriendCountText.text = "${summary.friendCount} friends"
         binding.profileActivityHeaderText.text = if (isOwnProfile) "Your Activity" else "Recent Activity"
-        binding.profileAddFriendButton.visibility = if (isOwnProfile) View.GONE else View.VISIBLE
+        val showAcceptDecline = !isOwnProfile && summary.friendshipStatus == FriendshipStatus.RECEIVED
+        binding.profileAddFriendButton.visibility =
+            if (isOwnProfile || showAcceptDecline) View.GONE else View.VISIBLE
+        binding.profileFriendRequestActions.visibility = if (showAcceptDecline) View.VISIBLE else View.GONE
         binding.profileAddFriendButton.text = friendButtonLabel(summary.friendshipStatus)
         binding.profileAddFriendButton.isEnabled =
             summary.friendshipStatus == FriendshipStatus.NONE ||
@@ -149,27 +183,19 @@ class ProfileFragment : Fragment() {
             else android.R.drawable.ic_media_previous
         )
         binding.profileAvatarImage.isEnabled = isOwnProfile
-        binding.profileFriendCountText.isClickable = isOwnProfile
-        binding.profileFriendCountText.isFocusable = isOwnProfile
+        binding.profileFriendCountText.isClickable = true
+        binding.profileFriendCountText.isFocusable = true
     }
 
-    private fun uploadProfileImage(uri: Uri) {
-        _binding?.profileAvatarImage?.setImageURI(uri)
+    private fun uploadProfileImage(imageBytes: ByteArray) {
+        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        _binding?.profileAvatarImage?.setImageBitmap(bitmap)
         _binding?.profileAvatarImage?.isEnabled = false
         _binding?.profileAvatarImage?.alpha = 0.65f
 
         lifecycleScope.launch {
             if (!isAdded) return@launch
-            val compressed = readCompressedImageBytes(uri)
-            if (compressed == null) {
-                Toast.makeText(requireContext(), "Could not read selected image", Toast.LENGTH_LONG).show()
-                _binding?.profileAvatarImage?.isEnabled = true
-                _binding?.profileAvatarImage?.alpha = 1f
-                loadProfileImageFromCloud(viewedUid)
-                return@launch
-            }
-
-            authRepository.uploadProfilePhoto(compressed).onSuccess {
+            authRepository.uploadProfilePhoto(imageBytes).onSuccess {
                 Toast.makeText(requireContext(), "Profile picture updated", Toast.LENGTH_SHORT).show()
                 loadProfileImageFromCloud(viewedUid)
             }.onFailure { error ->
@@ -183,41 +209,6 @@ class ProfileFragment : Fragment() {
             _binding?.profileAvatarImage?.isEnabled = true
             _binding?.profileAvatarImage?.alpha = 1f
         }
-    }
-
-    private fun readCompressedImageBytes(uri: Uri): ByteArray? {
-        val resolver = requireContext().contentResolver
-
-        val boundsOptions = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        resolver.openInputStream(uri)?.use { stream ->
-            BitmapFactory.decodeStream(stream, null, boundsOptions)
-        } ?: return null
-
-        val maxDim = max(boundsOptions.outWidth, boundsOptions.outHeight)
-        if (maxDim <= 0) return null
-
-        var sampleSize = 1
-        while (maxDim / sampleSize > 768) {
-            sampleSize *= 2
-        }
-
-        val decodeOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
-        val decodedBitmap = resolver.openInputStream(uri)?.use { stream ->
-            BitmapFactory.decodeStream(stream, null, decodeOptions)
-        } ?: return null
-
-        val scaledBitmap = if (max(decodedBitmap.width, decodedBitmap.height) > 512) {
-            val ratio = 512f / max(decodedBitmap.width, decodedBitmap.height).toFloat()
-            val targetW = (decodedBitmap.width * ratio).toInt().coerceAtLeast(1)
-            val targetH = (decodedBitmap.height * ratio).toInt().coerceAtLeast(1)
-            android.graphics.Bitmap.createScaledBitmap(decodedBitmap, targetW, targetH, true)
-        } else {
-            decodedBitmap
-        }
-
-        val output = ByteArrayOutputStream()
-        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 72, output)
-        return output.toByteArray()
     }
 
     private fun loadProfileImageFromCloud(uid: String?) {
@@ -279,5 +270,16 @@ class ProfileFragment : Fragment() {
         FeedCommentsBottomSheetDialogFragment
             .newInstance(activity)
             .show(childFragmentManager, "feed_comments")
+    }
+
+    private fun updateCollapsedHeader(scrollOffset: Int) {
+        if (_binding == null || collapsibleSectionHeight == 0) return
+        val collapse = scrollOffset.coerceIn(0, collapsibleSectionHeight)
+        binding.profileCollapsibleSection.layoutParams = binding.profileCollapsibleSection.layoutParams.apply {
+            height = (collapsibleSectionHeight - collapse).coerceAtLeast(0)
+        }
+        binding.profileCollapsibleSection.alpha =
+            ((collapsibleSectionHeight - collapse).toFloat() / collapsibleSectionHeight).coerceIn(0f, 1f)
+        binding.profileCollapsibleSection.requestLayout()
     }
 }

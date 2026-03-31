@@ -49,6 +49,7 @@ class FeedCommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
             id = requireArguments().getString(ARG_ID).orEmpty(),
             actorUid = requireArguments().getString(ARG_ACTOR_UID).orEmpty(),
             actorName = requireArguments().getString(ARG_ACTOR_NAME).orEmpty(),
+            actorImageBase64 = requireArguments().getString(ARG_ACTOR_IMAGE_BASE64),
             listId = requireArguments().getString(ARG_LIST_ID).orEmpty(),
             entryId = requireArguments().getString(ARG_ENTRY_ID).orEmpty(),
             trackTitle = requireArguments().getString(ARG_TRACK_TITLE).orEmpty(),
@@ -134,6 +135,7 @@ class FeedCommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
         private const val ARG_ID = "id"
         private const val ARG_ACTOR_UID = "actorUid"
         private const val ARG_ACTOR_NAME = "actorName"
+        private const val ARG_ACTOR_IMAGE_BASE64 = "actorImageBase64"
         private const val ARG_LIST_ID = "listId"
         private const val ARG_ENTRY_ID = "entryId"
         private const val ARG_TRACK_TITLE = "trackTitle"
@@ -153,6 +155,7 @@ class FeedCommentsBottomSheetDialogFragment : BottomSheetDialogFragment() {
                     ARG_ID to item.id,
                     ARG_ACTOR_UID to item.actorUid,
                     ARG_ACTOR_NAME to item.actorName,
+                    ARG_ACTOR_IMAGE_BASE64 to item.actorImageBase64,
                     ARG_LIST_ID to item.listId,
                     ARG_ENTRY_ID to item.entryId,
                     ARG_TRACK_TITLE to item.trackTitle,

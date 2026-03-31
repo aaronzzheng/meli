@@ -29,6 +29,10 @@ class FriendsFragment : Fragment() {
             viewModel.unfriend(FirebaseAuth.getInstance().currentUser?.uid, friend.uid)
         }
     )
+    private val viewedUid get() = arguments?.getString("profileUid").orEmpty().ifBlank {
+        FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
+    }
+    private val isOwnFriendsList get() = viewedUid == FirebaseAuth.getInstance().currentUser?.uid
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,13 +46,15 @@ class FriendsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        friendsAdapter.setAllowUnfriend(isOwnFriendsList)
+        binding.friendsTitleText.text = if (isOwnFriendsList) "Friends" else "Friends List"
         observeFriends()
-        viewModel.loadFriends(FirebaseAuth.getInstance().currentUser?.uid)
+        viewModel.loadFriends(viewedUid)
     }
 
     override fun onResume() {
         super.onResume()
-        viewModel.loadFriends(FirebaseAuth.getInstance().currentUser?.uid)
+        viewModel.loadFriends(viewedUid)
     }
 
     private fun observeFriends() {

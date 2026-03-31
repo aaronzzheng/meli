@@ -1,198 +1,198 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/meli_paper"
-    android:paddingStart="@dimen/meli_screen_padding"
-    android:paddingTop="@dimen/meli_screen_padding"
-    android:paddingEnd="@dimen/meli_screen_padding"
     tools:context=".ui.home.HomeFragment">
 
-    <LinearLayout
-        android:id="@+id/homeHeaderRow"
-        android:layout_width="0dp"
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:id="@+id/homeTitleText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/app_name"
-            android:textAppearance="@style/TextAppearance.Meli.ScreenTitle" />
-
-        <FrameLayout
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:clipChildren="false"
-            android:clipToPadding="false">
-
-            <ImageButton
-                android:id="@+id/notification_button"
-                style="@style/Widget.Meli.IconButton"
-                android:contentDescription="Open notifications"
-                android:padding="6dp"
-                android:src="@drawable/ic_profile_black_24dp" />
-
-            <TextView
-                android:id="@+id/notificationBadgeText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end|top"
-                android:layout_marginEnd="-2dp"
-                android:layout_marginTop="-4dp"
-                android:text="0"
-                android:textColor="@color/meli_red"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
-        </FrameLayout>
-
-        <ImageButton
-            android:id="@+id/button_settings"
-            style="@style/Widget.Meli.IconButton"
-            android:layout_marginStart="8dp"
-            android:contentDescription="@string/cd_open_settings"
-            android:src="@drawable/menu_24dp_000000_fill0_wght400_grad0_opsz24" />
-    </LinearLayout>
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/homeSearchCard"
-        style="@style/Widget.Meli.SearchCard"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/homeHeaderRow">
+        android:background="@color/meli_paper"
+        android:paddingStart="@dimen/meli_screen_padding"
+        android:paddingTop="@dimen/meli_screen_padding"
+        android:paddingEnd="@dimen/meli_screen_padding">
 
         <LinearLayout
+            android:id="@+id/homeHeaderRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="14dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="14dp"
-            android:paddingBottom="8dp">
+            android:orientation="horizontal">
 
-            <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_search_black_24dp"
-                android:tint="@color/meli_ink" />
-
-            <EditText
-                android:id="@+id/homeSearchEditText"
+            <TextView
+                android:id="@+id/homeTitleText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
                 android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:hint="Search a song, member..."
-                android:imeOptions="actionSearch"
-                android:importantForAutofill="no"
-                android:inputType="text"
-                android:maxLines="1"
-                android:padding="0dp"
-                android:textColor="@color/meli_ink"
-                android:textColorHint="@color/meli_text_muted"
-                android:textSize="16sp" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+                android:text="@string/app_name"
+                android:textAppearance="@style/TextAppearance.Meli.ScreenTitle" />
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/homeSearchDropdownCard"
-        style="@style/Widget.Meli.DropdownCard"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="@id/homeSearchCard"
-        app:layout_constraintStart_toStartOf="@id/homeSearchCard"
-        app:layout_constraintTop_toBottomOf="@id/homeSearchCard">
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <ImageButton
+                    android:id="@+id/notification_button"
+                    style="@style/Widget.Meli.IconButton"
+                    android:contentDescription="Open notifications"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_profile_black_24dp" />
+
+                <TextView
+                    android:id="@+id/notificationBadgeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end|top"
+                    android:layout_marginTop="-4dp"
+                    android:layout_marginEnd="-2dp"
+                    android:text="0"
+                    android:textColor="@color/meli_red"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <ImageButton
+                android:id="@+id/button_settings"
+                style="@style/Widget.Meli.IconButton"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/cd_open_settings"
+                android:src="@drawable/menu_24dp_000000_fill0_wght400_grad0_opsz24" />
+        </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/homeCollapsibleSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            app:layout_scrollFlags="scroll|enterAlways|snap">
 
-            <TextView
-                android:id="@+id/homeSearchEmptyText"
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/homeSearchCard"
+                style="@style/Widget.Meli.SearchCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="8dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="8dp"
-                android:text="No users found."
-                android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
-                android:visibility="gone" />
+                android:layout_marginTop="20dp">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/homeSearchResultsRecyclerView"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="14dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="14dp"
+                    android:paddingBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_search_black_24dp"
+                        android:tint="@color/meli_ink" />
+
+                    <EditText
+                        android:id="@+id/homeSearchEditText"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:hint="Search a song, member..."
+                        android:imeOptions="actionSearch"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:padding="0dp"
+                        android:textColor="@color/meli_ink"
+                        android:textColorHint="@color/meli_text_muted"
+                        android:textSize="16sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/homeSearchDropdownCard"
+                style="@style/Widget.Meli.DropdownCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxHeight="320dp"
-                android:nestedScrollingEnabled="true"
-                tools:itemCount="3"
-                tools:listitem="@layout/item_home_user_search" />
+                android:layout_marginTop="8dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:id="@+id/homeSearchEmptyText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="8dp"
+                        android:paddingTop="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="8dp"
+                        android:text="No users found."
+                        android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
+                        android:visibility="gone" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/homeSearchResultsRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:maxHeight="320dp"
+                        android:nestedScrollingEnabled="true"
+                        tools:itemCount="3"
+                        tools:listitem="@layout/item_home_user_search" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
 
-    <TextView
-        android:id="@+id/homeFeedHeaderText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
-        android:text="Your Feed"
-        android:textAppearance="@style/TextAppearance.Meli.SectionTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/homeSearchCard" />
+        <TextView
+            android:id="@+id/homeFeedHeaderText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Your Feed"
+            android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
 
-    <View
-        android:id="@+id/homeFeedDivider"
-        android:layout_width="0dp"
-        android:layout_height="2dp"
-        android:layout_marginTop="8dp"
-        android:background="@color/meli_line"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/homeFeedHeaderText" />
+        <View
+            android:id="@+id/homeFeedDivider"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginTop="8dp"
+            android:background="@color/meli_line" />
+    </com.google.android.material.appbar.AppBarLayout>
 
     <TextView
         android:id="@+id/homeFeedEmptyText"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/meli_screen_padding"
         android:layout_marginTop="14dp"
+        android:layout_marginEnd="@dimen/meli_screen_padding"
         android:text="No recent ranking activity yet."
         android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
         android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/homeFeedDivider" />
+        app:layout_anchor="@id/homeFeedRecyclerView"
+        app:layout_anchorGravity="top|start" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/homeFeedRecyclerView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
+        android:paddingStart="@dimen/meli_screen_padding"
         android:paddingTop="14dp"
+        android:paddingEnd="@dimen/meli_screen_padding"
         android:paddingBottom="12dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/homeFeedDivider"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:itemCount="4"
         tools:listitem="@layout/item_profile_ranking" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -71,9 +71,11 @@ data class TrackRating(
 }
 
 data class FriendTrackRating(
+    val userUid: String,
     val userName: String,
     val score: Double,
-    val sentiment: RatingSentiment
+    val sentiment: RatingSentiment,
+    val notes: String
 ) {
     val formattedScore: String
         get() = String.format(Locale.US, "%.1f", score)

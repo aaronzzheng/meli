@@ -10,46 +10,25 @@
     tools:context=".ui.list.ListFragment">
 
     <TextView
+        android:id="@+id/listTitleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/list_score_header"
-        android:textAppearance="@style/TextAppearance.Meli.SectionTitle"
-        android:textColor="@color/meli_green"
-        android:textSize="18sp" />
+        android:text="My List"
+        android:textAppearance="@style/TextAppearance.Meli.ScreenTitle" />
 
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:layout_width="match_parent"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/sortTriggerButton"
+        style="@style/Widget.Meli.TextButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        app:singleSelection="true">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/sortHighestButton"
-            style="@style/Widget.Meli.OutlinedActionButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:checkable="true"
-            android:text="@string/list_sort_highest" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/sortLowestButton"
-            style="@style/Widget.Meli.OutlinedActionButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:checkable="true"
-            android:text="@string/list_sort_lowest" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/sortRecentButton"
-            style="@style/Widget.Meli.OutlinedActionButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:checkable="true"
-            android:text="@string/list_sort_recent" />
-    </com.google.android.material.button.MaterialButtonToggleGroup>
+        android:layout_marginTop="2dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:minWidth="0dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:text="@string/list_score_header"
+        android:textColor="@color/meli_green" />
 
     <ProgressBar
         android:id="@+id/listLoading"

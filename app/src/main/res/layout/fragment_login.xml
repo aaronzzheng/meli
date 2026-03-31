@@ -12,24 +12,87 @@
         android:layout_height="wrap_content"
         android:text="meli"
         android:textAppearance="@style/TextAppearance.Meli.ScreenTitle"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="88dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/nameInputLayout"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/authTabsRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="42dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/titleText">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/signInTabText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="Sign In"
+                android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
+
+            <View
+                android:id="@+id/signInTabUnderline"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginTop="4dp"
+                android:background="@color/meli_ink" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="26dp"
+            android:layout_height="1dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/createAccountTabText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="Create Account"
+                android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
+
+            <View
+                android:id="@+id/createAccountTabUnderline"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginTop="4dp"
+                android:background="@color/meli_ink"
+                android:visibility="invisible" />
+        </LinearLayout>
+    </LinearLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/nameInputLayout"
         style="@style/Widget.Meli.TextInputLayout.Outlined"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Name"
+        android:layout_marginTop="28dp"
+        android:hint="Enter name"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/usernameInputLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/titleText">
+        app:layout_constraintTop_toBottomOf="@id/authTabsRow">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/nameEditText"
@@ -39,16 +102,34 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/usernameInputLayout"
+        android:id="@+id/createUsernameInputLayout"
         style="@style/Widget.Meli.TextInputLayout.Outlined"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:hint="Email"
-        app:layout_constraintBottom_toTopOf="@id/passwordInputLayout"
+        android:hint="Enter email"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/nameInputLayout">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/createUsernameEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/usernameInputLayout"
+        style="@style/Widget.Meli.TextInputLayout.Outlined"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="Enter email"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/createUsernameInputLayout">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/usernameEditText"
@@ -63,9 +144,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:hint="Password"
+        android:hint="Enter password"
         app:passwordToggleEnabled="true"
-        app:layout_constraintBottom_toTopOf="@id/actionButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/usernameInputLayout">
@@ -80,25 +160,13 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/actionButton"
         style="@style/Widget.Meli.PrimaryButton"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="14dp"
+        android:minWidth="120dp"
         android:text="Sign In"
-        app:layout_constraintBottom_toTopOf="@id/toggleButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/passwordInputLayout" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/toggleButton"
-        style="@style/Widget.Meli.TextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Create an account"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/actionButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

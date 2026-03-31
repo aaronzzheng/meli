@@ -27,6 +27,7 @@ class ListFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var listViewModel: ListViewModel
     private lateinit var ratingAdapter: TrackRatingAdapter
+    private var shouldScrollToTopAfterSort = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,19 +60,26 @@ class ListFragment : Fragment() {
         setFragmentResultListener(TrackRatingDialogFragment.RESULT_KEY) { _, _ ->
             listViewModel.refresh()
         }
+        setFragmentResultListener(ListSortBottomSheetFragment.RESULT_KEY) { _, bundle ->
+            val sortName = bundle.getString(ListSortBottomSheetFragment.ARG_SORT_OPTION).orEmpty()
+            RankingSortOption.entries.firstOrNull { it.name == sortName }?.let { sortOption ->
+                shouldScrollToTopAfterSort = true
+                listViewModel.setSortOption(sortOption)
+            }
+        }
 
-        binding.sortHighestButton.setOnClickListener {
-            listViewModel.setSortOption(RankingSortOption.HIGHEST_RATED)
-        }
-        binding.sortLowestButton.setOnClickListener {
-            listViewModel.setSortOption(RankingSortOption.LOWEST_RATED)
-        }
-        binding.sortRecentButton.setOnClickListener {
-            listViewModel.setSortOption(RankingSortOption.RECENT)
+        binding.sortTriggerButton.setOnClickListener {
+            ListSortBottomSheetFragment()
+                .show(parentFragmentManager, ListSortBottomSheetFragment.TAG)
         }
 
         listViewModel.ratings.observe(viewLifecycleOwner) { ratings ->
-            ratingAdapter.submitList(ratings)
+            ratingAdapter.submitList(ratings) {
+                if (shouldScrollToTopAfterSort) {
+                    binding.listRecyclerView.scrollToPosition(0)
+                    shouldScrollToTopAfterSort = false
+                }
+            }
             binding.emptyListText.visibility = if (ratings.isEmpty()) View.VISIBLE else View.GONE
         }
 
@@ -80,9 +88,11 @@ class ListFragment : Fragment() {
         }
 
         listViewModel.sortOption.observe(viewLifecycleOwner) { sortOption ->
-            binding.sortHighestButton.isChecked = sortOption == RankingSortOption.HIGHEST_RATED
-            binding.sortLowestButton.isChecked = sortOption == RankingSortOption.LOWEST_RATED
-            binding.sortRecentButton.isChecked = sortOption == RankingSortOption.RECENT
+            binding.sortTriggerButton.text = when (sortOption) {
+                RankingSortOption.HIGHEST_RATED -> "High-Low"
+                RankingSortOption.LOWEST_RATED -> "Low-High"
+                RankingSortOption.RECENT -> "Recent"
+            }
         }
 
         listViewModel.message.observe(viewLifecycleOwner) { message ->

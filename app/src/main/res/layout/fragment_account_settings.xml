@@ -59,6 +59,29 @@
             android:text="Save Name" />
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/username_input_layout"
+            style="@style/Widget.Meli.TextInputLayout.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:hint="Username">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/username_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/save_username_button"
+            style="@style/Widget.Meli.OutlinedActionButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Save Username" />
+
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/email_input_layout"
             style="@style/Widget.Meli.TextInputLayout.Outlined"
             android:layout_width="match_parent"

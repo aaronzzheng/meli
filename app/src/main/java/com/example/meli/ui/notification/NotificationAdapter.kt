@@ -11,7 +11,8 @@ import com.example.meli.model.AppNotification
 
 class NotificationAdapter(
     private val onAccept: (AppNotification) -> Unit,
-    private val onDecline: (AppNotification) -> Unit
+    private val onDecline: (AppNotification) -> Unit,
+    private val onNotificationClicked: (AppNotification) -> Unit
 ) : ListAdapter<AppNotification, NotificationAdapter.NotificationViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotificationViewHolder {
@@ -20,7 +21,7 @@ class NotificationAdapter(
             parent,
             false
         )
-        return NotificationViewHolder(binding, onAccept, onDecline)
+        return NotificationViewHolder(binding, onAccept, onDecline, onNotificationClicked)
     }
 
     override fun onBindViewHolder(holder: NotificationViewHolder, position: Int) {
@@ -30,7 +31,8 @@ class NotificationAdapter(
     class NotificationViewHolder(
         private val binding: ItemNotificationBinding,
         private val onAccept: (AppNotification) -> Unit,
-        private val onDecline: (AppNotification) -> Unit
+        private val onDecline: (AppNotification) -> Unit,
+        private val onNotificationClicked: (AppNotification) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: AppNotification) {
@@ -47,6 +49,7 @@ class NotificationAdapter(
                 else -> ""
             }
 
+            binding.root.setOnClickListener { onNotificationClicked(item) }
             binding.notificationAcceptButton.setOnClickListener { onAccept(item) }
             binding.notificationDeclineButton.setOnClickListener { onDecline(item) }
         }

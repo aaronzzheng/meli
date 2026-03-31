@@ -134,6 +134,14 @@ class SocialRepository(
         }
     }
 
+    suspend fun acceptFriendRequest(currentUid: String, targetUid: String): Result<FriendshipStatus> {
+        return respondToFriendRequest(currentUid, targetUid, accept = true)
+    }
+
+    suspend fun declineFriendRequest(currentUid: String, targetUid: String): Result<FriendshipStatus> {
+        return respondToFriendRequest(currentUid, targetUid, accept = false)
+    }
+
     suspend fun cancelOutgoingRequest(currentUid: String, targetUid: String): Result<Unit> {
         return try {
             val currentRef = firestore.collection("users")
@@ -207,7 +215,8 @@ class SocialRepository(
                     uid = friendUid,
                     displayName = displayName,
                     username = username,
-                    email = email
+                    email = email,
+                    friendshipStatus = FriendshipStatus.FRIENDS
                 )
             }
 
@@ -236,5 +245,64 @@ class SocialRepository(
             ?: userDoc.getString("username")?.takeIf { it.isNotBlank() }
             ?: email.substringBefore("@").takeIf { it.isNotBlank() }
             ?: "Someone"
+    }
+
+    private suspend fun respondToFriendRequest(
+        currentUid: String,
+        targetUid: String,
+        accept: Boolean
+    ): Result<FriendshipStatus> {
+        return try {
+            val currentFriendRef = firestore.collection("users")
+                .document(currentUid)
+                .collection("friends")
+                .document(targetUid)
+            val senderFriendRef = firestore.collection("users")
+                .document(targetUid)
+                .collection("friends")
+                .document(currentUid)
+
+            if (accept) {
+                firestore.runBatch { batch ->
+                    batch.set(
+                        currentFriendRef,
+                        mapOf(
+                            "status" to "ACCEPTED",
+                            "acceptedAt" to Timestamp.now(),
+                            "direction" to "INCOMING"
+                        ),
+                        SetOptions.merge()
+                    )
+                    batch.set(
+                        senderFriendRef,
+                        mapOf(
+                            "status" to "ACCEPTED",
+                            "acceptedAt" to Timestamp.now(),
+                            "direction" to "OUTGOING"
+                        ),
+                        SetOptions.merge()
+                    )
+                }.await()
+                notificationRepository.createFriendRequestAcceptedNotification(
+                    targetUid = targetUid,
+                    actorUid = currentUid,
+                    actorName = resolveActorName(currentUid)
+                )
+                Result.success(FriendshipStatus.FRIENDS)
+            } else {
+                firestore.runBatch { batch ->
+                    batch.delete(currentFriendRef)
+                    batch.delete(senderFriendRef)
+                }.await()
+                notificationRepository.createFriendRequestDeclinedNotification(
+                    targetUid = targetUid,
+                    actorUid = currentUid,
+                    actorName = resolveActorName(currentUid)
+                )
+                Result.success(FriendshipStatus.NONE)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

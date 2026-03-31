@@ -7,6 +7,7 @@ import com.example.meli.model.RatingSentiment
 import com.example.meli.model.TrackRating
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 import kotlin.math.pow
 
@@ -19,6 +20,7 @@ class TrackRatingRepository(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) {
+    private val notificationRepository = NotificationRepository(firestore)
 
     companion object {
         const val DEFAULT_LIST_ID = "songs"
@@ -156,9 +158,11 @@ class TrackRatingRepository(
                     ?.takeIf { it.isNotBlank() }
                     ?: "Friend"
                 friendRatings += FriendTrackRating(
+                    userUid = friendId,
                     userName = userName,
                     score = rating.score,
-                    sentiment = rating.sentiment
+                    sentiment = rating.sentiment,
+                    notes = rating.notes
                 )
             }
 
@@ -211,6 +215,12 @@ class TrackRatingRepository(
                 }
             }.await()
 
+            notifyFriendsAboutSameTrackRating(
+                uid = uid,
+                trackId = current.trackId,
+                trackTitle = current.trackTitle
+            )
+
             Result.success(current)
         } catch (error: Exception) {
             Result.failure(error)
@@ -231,6 +241,46 @@ class TrackRatingRepository(
                 .document(trackId)
                 .delete()
                 .await()
+            Result.success(Unit)
+        } catch (error: Exception) {
+            Result.failure(error)
+        }
+    }
+
+    suspend fun updateRatingNotes(trackId: String, notes: String): Result<Unit> {
+        val uid = currentUid()
+            ?: return Result.failure(IllegalStateException("Please sign in to edit notes."))
+
+        return try {
+            val ratingRef = ratingCollection(uid).document(trackId)
+            val existing = ratingRef.get().await()
+            if (!existing.exists()) {
+                return Result.failure(IllegalStateException("Rank this song before adding notes."))
+            }
+
+            val updatedAt = System.currentTimeMillis()
+            ratingRef.update(
+                mapOf(
+                    "comment" to notes,
+                    "updatedAt" to updatedAt
+                )
+            ).await()
+
+            firestore.collection("users")
+                .document(uid)
+                .collection("rankingLists")
+                .document(DEFAULT_LIST_ID)
+                .collection("entries")
+                .document(trackId)
+                .set(
+                    mapOf(
+                        "comment" to notes,
+                        "updatedAt" to updatedAt
+                    ),
+                    SetOptions.merge()
+                )
+                .await()
+
             Result.success(Unit)
         } catch (error: Exception) {
             Result.failure(error)
@@ -425,5 +475,49 @@ class TrackRatingRepository(
             comparisonCount == 0 &&
             winCount == 0 &&
             lossCount == 0
+    }
+
+    private suspend fun notifyFriendsAboutSameTrackRating(
+        uid: String,
+        trackId: String,
+        trackTitle: String
+    ) {
+        val actorName = resolveActorName(uid)
+        val friendIds = firestore.collection("users")
+            .document(uid)
+            .collection("friends")
+            .whereEqualTo("status", "ACCEPTED")
+            .get()
+            .await()
+            .documents
+            .map { it.id }
+
+        for (friendId in friendIds) {
+            val friendRatingExists = firestore.collection("users")
+                .document(friendId)
+                .collection("ratings")
+                .document(trackId)
+                .get()
+                .await()
+                .exists()
+            if (!friendRatingExists) continue
+
+            notificationRepository.createSameTrackRatingNotification(
+                targetUid = friendId,
+                actorUid = uid,
+                actorName = actorName,
+                trackId = trackId,
+                trackTitle = trackTitle
+            )
+        }
+    }
+
+    private suspend fun resolveActorName(uid: String): String {
+        val userDoc = firestore.collection("users").document(uid).get().await()
+        val email = userDoc.getString("email").orEmpty()
+        return userDoc.getString("displayName")?.takeIf { it.isNotBlank() }
+            ?: userDoc.getString("username")?.takeIf { it.isNotBlank() }
+            ?: email.substringBefore("@").takeIf { it.isNotBlank() }
+            ?: "Someone"
     }
 }

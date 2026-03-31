@@ -17,8 +17,31 @@ class AuthRepository {
 
     fun getCurrentUser() = auth.currentUser
 
-    suspend fun register(email: String, pass: String, displayName: String = ""): Result<Unit> {
+    suspend fun getCurrentUsername(): Result<String> {
         return try {
+            val user = auth.currentUser ?: throw Exception("No signed-in user")
+            val username = firestore.collection("users")
+                .document(user.uid)
+                .get()
+                .await()
+                .getString("username")
+                .orEmpty()
+            Result.success(username)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun register(
+        email: String,
+        pass: String,
+        displayName: String = "",
+        username: String = ""
+    ): Result<Unit> {
+        return try {
+            val normalizedUsername = username.trim().lowercase()
+            validateUsername(normalizedUsername)
+            ensureUsernameAvailable(normalizedUsername)
             val result = auth.createUserWithEmailAndPassword(email, pass).await()
             val firebaseUser = result.user ?: throw Exception("User creation failed")
             val normalizedName = displayName.trim()
@@ -28,13 +51,12 @@ class AuthRepository {
                     .build()
                 firebaseUser.updateProfile(profileUpdates).await()
             }
-            val username = email.substringBefore("@")
             val savedDisplayName = normalizedName.ifBlank { firebaseUser.displayName.orEmpty() }
             val user = User(
                 uid = firebaseUser.uid,
                 email = email,
                 displayName = savedDisplayName,
-                username = username,
+                username = normalizedUsername,
                 createdAt = Timestamp.now()
             )
             firestore.collection("users").document(user.uid).set(user).await()
@@ -46,7 +68,7 @@ class AuthRepository {
 
     suspend fun login(email: String, pass: String): Result<Unit> {
         return try {
-            val result = auth.signInWithEmailAndPassword(email, pass).await()
+            val result = auth.signInWithEmailAndPassword(email.trim(), pass).await()
             result.user?.let { syncUserProfileToFirestore(it) }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -78,12 +100,25 @@ class AuthRepository {
             firestore.collection("users")
                 .document(user.uid)
                 .set(
-                    mapOf(
-                        "email" to newEmail,
-                        "username" to newEmail.substringBefore("@")
-                    ),
+                    mapOf("email" to newEmail),
                     SetOptions.merge()
                 )
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateUsername(newUsername: String): Result<Unit> {
+        return try {
+            val user = auth.currentUser ?: throw Exception("No signed-in user")
+            val normalizedUsername = newUsername.trim().lowercase()
+            validateUsername(normalizedUsername)
+            ensureUsernameAvailable(normalizedUsername, user.uid)
+            firestore.collection("users")
+                .document(user.uid)
+                .set(mapOf("username" to normalizedUsername), SetOptions.merge())
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -148,7 +183,24 @@ class AuthRepository {
             // Remove known per-user subcollections.
             deleteSubcollection(userRef, "friends")
             deleteSubcollection(userRef, "ratings")
+            deleteSubcollection(userRef, "notifications")
             deleteSubcollection(userRef, "tests_manual")
+
+            val usersSnapshot = firestore.collection("users").get().await()
+            for (otherUserDoc in usersSnapshot.documents) {
+                if (otherUserDoc.id == uid) continue
+                val otherUserRef = otherUserDoc.reference
+
+                otherUserRef.collection("friends").document(uid).delete().await()
+
+                val notifications = otherUserRef.collection("notifications")
+                    .whereEqualTo("actorUid", uid)
+                    .get()
+                    .await()
+                for (notificationDoc in notifications.documents) {
+                    notificationDoc.reference.delete().await()
+                }
+            }
 
             // Remove user profile document.
             userRef.delete().await()
@@ -172,7 +224,13 @@ class AuthRepository {
 
     private suspend fun syncUserProfileToFirestore(user: FirebaseUser) {
         val email = user.email.orEmpty()
-        val username = email.substringBefore("@").takeIf { it.isNotBlank() }.orEmpty()
+        val existingUser = firestore.collection("users")
+            .document(user.uid)
+            .get()
+            .await()
+        val username = existingUser.getString("username")
+            ?.takeIf { it.isNotBlank() }
+            ?: email.substringBefore("@").takeIf { it.isNotBlank() }.orEmpty()
         val displayName = user.displayName.orEmpty()
 
         firestore.collection("users")
@@ -188,5 +246,25 @@ class AuthRepository {
                 SetOptions.merge()
             )
             .await()
+    }
+
+    private suspend fun ensureUsernameAvailable(username: String, excludingUid: String? = null) {
+        val snapshot = firestore.collection("users")
+            .whereEqualTo("username", username)
+            .get()
+            .await()
+        val existing = snapshot.documents.firstOrNull { it.id != excludingUid }
+        if (existing != null) {
+            throw IllegalArgumentException("Username is already taken")
+        }
+    }
+
+    private fun validateUsername(username: String) {
+        if (username.length !in 3..20) {
+            throw IllegalArgumentException("Username must be 3-20 characters")
+        }
+        if (!username.matches(Regex("^[a-z0-9._]+$"))) {
+            throw IllegalArgumentException("Username can only use letters, numbers, dots, and underscores")
+        }
     }
 }

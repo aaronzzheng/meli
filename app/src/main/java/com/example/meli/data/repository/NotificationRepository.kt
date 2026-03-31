@@ -31,6 +31,7 @@ class NotificationRepository(
                     type = type,
                     actorUid = actorUid,
                     actorName = doc.getString("actorName").orEmpty().ifBlank { "Someone" },
+                    trackId = doc.getString("trackId").orEmpty(),
                     message = doc.getString("message").orEmpty(),
                     createdAtMillis = extractTimestampMillis(doc.get("createdAt")),
                     status = status,
@@ -61,6 +62,7 @@ class NotificationRepository(
                         type = "FRIEND_REQUEST",
                         actorUid = actorUid,
                         actorName = actorName,
+                        trackId = "",
                         message = "$actorName wants to add you as a friend!",
                         createdAtMillis = extractTimestampMillis(doc.get("requestedAt")),
                         status = "PENDING",
@@ -222,6 +224,33 @@ class NotificationRepository(
                     "actorUid" to actorUid,
                     "actorName" to actorName,
                     "message" to "$actorName commented on your ranking of $trackTitle: $preview",
+                    "createdAt" to Timestamp.now(),
+                    "status" to "INFO",
+                    "isRead" to false
+                ),
+                SetOptions.merge()
+            )
+            .await()
+    }
+
+    suspend fun createSameTrackRatingNotification(
+        targetUid: String,
+        actorUid: String,
+        actorName: String,
+        trackId: String,
+        trackTitle: String
+    ) {
+        firestore.collection("users")
+            .document(targetUid)
+            .collection("notifications")
+            .document("same_track_${actorUid}_$trackId")
+            .set(
+                mapOf(
+                    "type" to "SAME_TRACK_RATING",
+                    "actorUid" to actorUid,
+                    "actorName" to actorName,
+                    "trackId" to trackId,
+                    "message" to "$actorName also rated $trackTitle.",
                     "createdAt" to Timestamp.now(),
                     "status" to "INFO",
                     "isRead" to false

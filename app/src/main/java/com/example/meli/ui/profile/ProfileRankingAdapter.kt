@@ -1,5 +1,7 @@
 package com.example.meli.ui.profile
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -63,6 +65,7 @@ class ProfileRankingAdapter(
                 placeholder(R.color.meli_surface_subtle)
                 error(R.color.meli_surface_subtle)
             }
+            bindActorAvatar(item)
 
             val score = item.rankingScore
             val scoreColorRes = when {
@@ -75,6 +78,22 @@ class ProfileRankingAdapter(
             binding.rankingScoreText.setBackgroundResource(R.drawable.bg_list_score_circle)
             binding.rankingLikeButton.setOnClickListener { onLikeClicked(item) }
             binding.rankingCommentButton.setOnClickListener { onCommentClicked(item) }
+        }
+
+        private fun bindActorAvatar(item: ProfileRankingActivity) {
+            val encoded = item.actorImageBase64
+            if (encoded.isNullOrBlank()) {
+                binding.rankingActorAvatarImage.setImageResource(R.drawable.ic_profile_black_24dp)
+                return
+            }
+
+            val bytes = runCatching { Base64.decode(encoded, Base64.DEFAULT) }.getOrNull()
+            val bitmap = bytes?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+            if (bitmap != null) {
+                binding.rankingActorAvatarImage.setImageBitmap(bitmap)
+            } else {
+                binding.rankingActorAvatarImage.setImageResource(R.drawable.ic_profile_black_24dp)
+            }
         }
     }
 

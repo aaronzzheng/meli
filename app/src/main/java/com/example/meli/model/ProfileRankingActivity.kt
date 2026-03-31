@@ -4,6 +4,7 @@ data class ProfileRankingActivity(
     val id: String,
     val actorUid: String,
     val actorName: String,
+    val actorImageBase64: String?,
     val listId: String,
     val entryId: String,
     val trackTitle: String,

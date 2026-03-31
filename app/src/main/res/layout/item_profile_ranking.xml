@@ -19,13 +19,13 @@
             android:layout_height="48dp"
             android:background="@drawable/bg_profile_avatar">
 
-            <TextView
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/rankingActorAvatarImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="center"
-                android:text=":)"
-                android:textColor="@color/meli_ink"
-                android:textSize="16sp" />
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_profile_black_24dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceMeliCircle" />
         </FrameLayout>
 
         <LinearLayout

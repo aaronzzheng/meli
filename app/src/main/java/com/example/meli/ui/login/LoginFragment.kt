@@ -38,13 +38,23 @@ class LoginFragment : Fragment() {
             when (state) {
                 LoginViewModel.LoginState.SIGN_IN -> {
                     binding.nameInputLayout.isVisible = false
+                    binding.createUsernameInputLayout.isVisible = false
                     binding.actionButton.text = "Sign In"
-                    binding.toggleButton.text = "Create an account"
+                    binding.usernameInputLayout.hint = "Enter email"
+                    binding.signInTabUnderline.isVisible = true
+                    binding.createAccountTabUnderline.isVisible = false
+                    binding.signInTabText.alpha = 1f
+                    binding.createAccountTabText.alpha = 0.55f
                 }
                 LoginViewModel.LoginState.CREATE_ACCOUNT -> {
                     binding.nameInputLayout.isVisible = true
+                    binding.createUsernameInputLayout.isVisible = true
                     binding.actionButton.text = "Create Account"
-                    binding.toggleButton.text = "Already have an account? Sign In"
+                    binding.usernameInputLayout.hint = "Enter email"
+                    binding.signInTabUnderline.isVisible = false
+                    binding.createAccountTabUnderline.isVisible = true
+                    binding.signInTabText.alpha = 0.55f
+                    binding.createAccountTabText.alpha = 1f
                 }
             }
         }
@@ -64,18 +74,28 @@ class LoginFragment : Fragment() {
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             binding.actionButton.isEnabled = !isLoading
-            binding.toggleButton.isEnabled = !isLoading
+            binding.signInTabText.isEnabled = !isLoading
+            binding.createAccountTabText.isEnabled = !isLoading
         }
 
         binding.actionButton.setOnClickListener {
             val email = binding.usernameEditText.text.toString()
             val pass = binding.passwordEditText.text.toString()
             val name = binding.nameEditText.text.toString()
-            viewModel.onActionButtonClicked(email, pass, name)
+            val username = binding.createUsernameEditText.text.toString()
+            viewModel.onActionButtonClicked(email, pass, name, username)
         }
 
-        binding.toggleButton.setOnClickListener {
-            viewModel.toggleState()
+        binding.signInTabText.setOnClickListener {
+            if (viewModel.state.value != LoginViewModel.LoginState.SIGN_IN) {
+                viewModel.toggleState()
+            }
+        }
+
+        binding.createAccountTabText.setOnClickListener {
+            if (viewModel.state.value != LoginViewModel.LoginState.CREATE_ACCOUNT) {
+                viewModel.toggleState()
+            }
         }
     }
 

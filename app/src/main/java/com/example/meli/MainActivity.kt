@@ -7,6 +7,7 @@ import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -26,18 +27,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var sensorManager: SensorManager
     private var lightSensor: Sensor? = null
+    private var lastLightLevelLux: Float? = null
     private val lightSensorListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent) {
             val lightLevel = event.values.firstOrNull() ?: return
-            val desiredNightMode = if (lightLevel < DARK_MODE_LIGHT_THRESHOLD_LUX) {
-                AppCompatDelegate.MODE_NIGHT_YES
-            } else {
-                AppCompatDelegate.MODE_NIGHT_NO
-            }
-
-            if (AppCompatDelegate.getDefaultNightMode() != desiredNightMode) {
-                Log.d(TAG, "Ambient light changed to $lightLevel lux, applying mode=$desiredNightMode")
-                AppCompatDelegate.setDefaultNightMode(desiredNightMode)
+            lastLightLevelLux = lightLevel
+            if (isAutoDarkModeEnabled()) {
+                applyNightModeForLux(lightLevel)
             }
         }
 
@@ -108,10 +104,42 @@ class MainActivity : AppCompatActivity() {
             }
             updateBottomNavVisibility()
         }
+
+        applyAutoDarkModePreference()
     }
 
     override fun onResume() {
         super.onResume()
+        applyAutoDarkModePreference()
+    }
+
+    override fun onPause() {
+        sensorManager.unregisterListener(lightSensorListener)
+        super.onPause()
+    }
+
+    private fun isAutoDarkModeEnabled(): Boolean {
+        return getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean(KEY_AUTO_DARK_MODE, true)
+    }
+
+    fun setAutoDarkModeEnabled(enabled: Boolean) {
+        getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_AUTO_DARK_MODE, enabled)
+            .apply()
+        applyAutoDarkModePreference()
+    }
+
+    private fun applyAutoDarkModePreference() {
+        sensorManager.unregisterListener(lightSensorListener)
+        if (!isAutoDarkModeEnabled()) {
+            if (AppCompatDelegate.getDefaultNightMode() != AppCompatDelegate.MODE_NIGHT_NO) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
+            return
+        }
+
         lightSensor?.let { sensor ->
             sensorManager.registerListener(
                 lightSensorListener,
@@ -119,10 +147,24 @@ class MainActivity : AppCompatActivity() {
                 SensorManager.SENSOR_DELAY_NORMAL
             )
         }
+        lastLightLevelLux?.let { applyNightModeForLux(it) }
     }
 
-    override fun onPause() {
-        sensorManager.unregisterListener(lightSensorListener)
-        super.onPause()
+    private fun applyNightModeForLux(lightLevel: Float) {
+        val desiredNightMode = if (lightLevel < DARK_MODE_LIGHT_THRESHOLD_LUX) {
+            AppCompatDelegate.MODE_NIGHT_YES
+        } else {
+            AppCompatDelegate.MODE_NIGHT_NO
+        }
+
+        if (AppCompatDelegate.getDefaultNightMode() != desiredNightMode) {
+            Log.d(TAG, "Ambient light changed to $lightLevel lux, applying mode=$desiredNightMode")
+            AppCompatDelegate.setDefaultNightMode(desiredNightMode)
+        }
+    }
+
+    companion object {
+        const val PREFS_NAME = "meli_preferences"
+        const val KEY_AUTO_DARK_MODE = "auto_dark_mode"
     }
 }

@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.meli.R
+import com.example.meli.MainActivity
 import com.example.meli.databinding.FragmentSettingsBinding
 
 class SettingsFragment : Fragment() {
@@ -65,6 +66,13 @@ class SettingsFragment : Fragment() {
 
         binding.buttonCloseSettings.setOnClickListener {
             findNavController().navigateUp()
+        }
+
+        val activity = requireActivity() as MainActivity
+        val prefs = requireContext().getSharedPreferences(MainActivity.PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        binding.autoDarkModeSwitch.isChecked = prefs.getBoolean(MainActivity.KEY_AUTO_DARK_MODE, true)
+        binding.autoDarkModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            activity.setAutoDarkModeEnabled(isChecked)
         }
 
         binding.settingsOptionRow.setOnClickListener {

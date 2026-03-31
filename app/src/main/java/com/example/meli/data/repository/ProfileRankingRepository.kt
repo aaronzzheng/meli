@@ -120,6 +120,11 @@ class ProfileRankingRepository(
             id = "${uid}_${listId}_${entryDoc.id}",
             actorUid = uid,
             actorName = actorName,
+            actorImageBase64 = firestore.collection("users")
+                .document(uid)
+                .get()
+                .await()
+                .getString("profileImageBase64"),
             listId = listId,
             entryId = entryDoc.id,
             trackTitle = title,

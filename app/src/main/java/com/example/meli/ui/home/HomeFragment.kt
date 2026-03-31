@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.widget.doAfterTextChanged
+import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -56,6 +57,7 @@ class HomeFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
+    private var collapsibleSectionHeight = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +75,10 @@ class HomeFragment : Fragment() {
         binding.homeFeedRecyclerView.adapter = rankingAdapter
         binding.homeSearchResultsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.homeSearchResultsRecyclerView.adapter = userSearchAdapter
+        binding.homeCollapsibleSection.doOnLayout {
+            collapsibleSectionHeight = it.height
+            updateCollapsedHeader(binding.homeFeedRecyclerView.computeVerticalScrollOffset())
+        }
         return binding.root
     }
 
@@ -94,6 +100,11 @@ class HomeFragment : Fragment() {
                 currentUid = FirebaseAuth.getInstance().currentUser?.uid
             )
         }
+        binding.homeFeedRecyclerView.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                updateCollapsedHeader(recyclerView.computeVerticalScrollOffset())
+            }
+        })
         viewModel.loadFeed(FirebaseAuth.getInstance().currentUser?.uid)
     }
 
@@ -110,7 +121,7 @@ class HomeFragment : Fragment() {
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { loading ->
-            val showEmpty = !loading && rankingAdapter.currentList.isEmpty()
+            val showEmpty = !loading && viewModel.activities.value.isNullOrEmpty()
             binding.homeFeedEmptyText.visibility = if (showEmpty) View.VISIBLE else View.GONE
         }
 
@@ -183,6 +194,17 @@ class HomeFragment : Fragment() {
         binding.homeSearchResultsRecyclerView.adapter = null
         binding.homeFeedRecyclerView.adapter = null
         _binding = null
+    }
+
+    private fun updateCollapsedHeader(scrollOffset: Int) {
+        if (_binding == null || collapsibleSectionHeight == 0) return
+        val collapse = scrollOffset.coerceIn(0, collapsibleSectionHeight)
+        binding.homeCollapsibleSection.layoutParams = binding.homeCollapsibleSection.layoutParams.apply {
+            height = (collapsibleSectionHeight - collapse).coerceAtLeast(0)
+        }
+        binding.homeCollapsibleSection.alpha =
+            ((collapsibleSectionHeight - collapse).toFloat() / collapsibleSectionHeight).coerceIn(0f, 1f)
+        binding.homeCollapsibleSection.requestLayout()
     }
 
     override fun onDestroy() {

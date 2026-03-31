@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,19 +7,16 @@
     android:background="@color/meli_paper"
     tools:context=".ui.profile.ProfileFragment">
 
-    <LinearLayout
-        android:id="@+id/profileTopSection"
-        android:layout_width="0dp"
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/meli_screen_padding"
-        android:layout_marginTop="@dimen/meli_screen_padding"
-        android:layout_marginEnd="@dimen/meli_screen_padding"
-        android:orientation="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:background="@color/meli_paper"
+        android:paddingStart="@dimen/meli_screen_padding"
+        android:paddingTop="@dimen/meli_screen_padding"
+        android:paddingEnd="@dimen/meli_screen_padding">
 
         <LinearLayout
+            android:id="@+id/profileTopBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
@@ -30,7 +27,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Name"
+                android:text=""
                 android:textAppearance="@style/TextAppearance.Meli.ScreenTitle" />
 
             <ImageButton
@@ -41,11 +38,13 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/profileCollapsibleSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/profileAvatarImage"
@@ -65,7 +64,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="@username"
+                android:text=""
                 android:textColor="@color/meli_ink"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -89,15 +88,40 @@
                 android:layout_marginTop="14dp"
                 android:text="Add Friend"
                 android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/profileFriendRequestActions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/profileAcceptFriendButton"
+                    style="@style/Widget.Meli.OutlinedActionButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Accept" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/profileDeclineFriendButton"
+                    style="@style/Widget.Meli.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Decline" />
+            </LinearLayout>
         </LinearLayout>
 
         <TextView
-        android:id="@+id/profileActivityHeaderText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
-        android:text="Your Activity"
-        android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
+            android:id="@+id/profileActivityHeaderText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Your Activity"
+            android:textAppearance="@style/TextAppearance.Meli.SectionTitle" />
 
         <View
             android:id="@+id/profileActivityDivider"
@@ -105,11 +129,11 @@
             android:layout_height="2dp"
             android:layout_marginTop="8dp"
             android:background="@color/meli_line" />
-    </LinearLayout>
+    </com.google.android.material.appbar.AppBarLayout>
 
     <TextView
         android:id="@+id/profileActivityEmptyText"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/meli_screen_padding"
         android:layout_marginTop="14dp"
@@ -117,25 +141,21 @@
         android:text="No ranking activity yet."
         android:textAppearance="@style/TextAppearance.Meli.BodyMuted"
         android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/profileTopSection" />
+        app:layout_anchor="@id/profileActivityRecyclerView"
+        app:layout_anchorGravity="top|start" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/profileActivityRecyclerView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingStart="@dimen/meli_screen_padding"
         android:paddingTop="14dp"
         android:paddingEnd="@dimen/meli_screen_padding"
         android:paddingBottom="12dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/profileTopSection"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:itemCount="3"
         tools:listitem="@layout/item_profile_ranking" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

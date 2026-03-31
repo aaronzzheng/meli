@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
 import com.example.meli.R
 import com.example.meli.data.repository.TrackRatingRepository
@@ -21,6 +22,12 @@ class TrackDetailFragment : Fragment() {
     private var _binding: FragmentTrackDetailBinding? = null
     private val binding get() = _binding!!
     private val repository = TrackRatingRepository()
+    private val friendRatingsAdapter = FriendTrackRatingAdapter { friendRating ->
+        findNavController().navigate(
+            R.id.userProfileFragment,
+            bundleOf("profileUid" to friendRating.userUid)
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,6 +35,8 @@ class TrackDetailFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentTrackDetailBinding.inflate(inflater, container, false)
+        binding.trackDetailFriendsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.trackDetailFriendsRecyclerView.adapter = friendRatingsAdapter
         return binding.root
     }
 
@@ -48,9 +57,15 @@ class TrackDetailFragment : Fragment() {
                 )
             ).show(parentFragmentManager, TrackRatingDialogFragment.TAG)
         }
+        binding.trackDetailNotesCard.setOnClickListener {
+            openNotesEditor()
+        }
 
         setFragmentResultListener(TrackRatingDialogFragment.RESULT_KEY) { _, _ ->
             loadTrackSummary()
+        }
+        setFragmentResultListener(TrackNotesBottomSheetFragment.RESULT_KEY) { _, bundle ->
+            saveNotes(bundle.getString(TrackNotesBottomSheetFragment.ARG_NOTES).orEmpty())
         }
 
         binding.trackDetailCoverImage.load(arguments?.getString(ARG_TRACK_IMAGE_URL)) {
@@ -67,6 +82,7 @@ class TrackDetailFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.trackDetailFriendsRecyclerView.adapter = null
         _binding = null
     }
 
@@ -114,17 +130,38 @@ class TrackDetailFragment : Fragment() {
                 }
             repository.loadFriendRatingsForTrack(trackId)
                 .onSuccess { friendRatings ->
-                    binding.trackDetailFriendsText.text = formatFriendRatings(friendRatings)
+                    friendRatingsAdapter.submitList(friendRatings)
+                    binding.trackDetailFriendsRecyclerView.visibility =
+                        if (friendRatings.isEmpty()) View.GONE else View.VISIBLE
+                    binding.trackDetailFriendsEmptyText.visibility =
+                        if (friendRatings.isEmpty()) View.VISIBLE else View.GONE
                 }
         }
     }
 
-    private fun formatFriendRatings(friendRatings: List<FriendTrackRating>): String {
-        if (friendRatings.isEmpty()) {
-            return getString(R.string.track_detail_friends_empty)
-        }
-        return friendRatings.take(5).joinToString(separator = "\n") { friendRating ->
-            "${friendRating.userName}: ${friendRating.formattedScore}"
+    private fun openNotesEditor() {
+        val currentNotes = binding.trackDetailNotesText.text?.toString().orEmpty()
+            .takeUnless { it == getString(R.string.track_detail_notes_empty) }
+            .orEmpty()
+        TrackNotesBottomSheetFragment
+            .newInstance(currentNotes)
+            .show(parentFragmentManager, TrackNotesBottomSheetFragment.TAG)
+    }
+
+    private fun saveNotes(notes: String) {
+        val trackId = arguments?.getString(ARG_TRACK_ID).orEmpty()
+        if (trackId.isBlank()) return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repository.updateRatingNotes(trackId, notes)
+                .onSuccess { loadTrackSummary() }
+                .onFailure { error ->
+                    android.widget.Toast.makeText(
+                        requireContext(),
+                        error.localizedMessage ?: "Failed to save notes.",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
         }
     }
 }

@@ -138,6 +138,38 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
+    fun acceptFriendRequest(currentUid: String?, targetUid: String?) {
+        if (currentUid.isNullOrBlank() || targetUid.isNullOrBlank()) return
+
+        viewModelScope.launch {
+            socialRepository.acceptFriendRequest(currentUid, targetUid)
+                .onSuccess { status ->
+                    _profile.value = _profile.value?.copy(friendshipStatus = status)
+                    _friendActionMessage.value = "Friend request accepted"
+                }
+                .onFailure { throwable ->
+                    _friendActionMessage.value =
+                        throwable.localizedMessage ?: "Failed to accept friend request."
+                }
+        }
+    }
+
+    fun declineFriendRequest(currentUid: String?, targetUid: String?) {
+        if (currentUid.isNullOrBlank() || targetUid.isNullOrBlank()) return
+
+        viewModelScope.launch {
+            socialRepository.declineFriendRequest(currentUid, targetUid)
+                .onSuccess { status ->
+                    _profile.value = _profile.value?.copy(friendshipStatus = status)
+                    _friendActionMessage.value = "Friend request declined"
+                }
+                .onFailure { throwable ->
+                    _friendActionMessage.value =
+                        throwable.localizedMessage ?: "Failed to decline friend request."
+                }
+        }
+    }
+
     fun clearFriendActionMessage() {
         _friendActionMessage.value = null
     }

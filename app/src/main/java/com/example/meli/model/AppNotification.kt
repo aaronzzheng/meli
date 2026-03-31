@@ -5,6 +5,7 @@ data class AppNotification(
     val type: String,
     val actorUid: String,
     val actorName: String,
+    val trackId: String = "",
     val message: String,
     val createdAtMillis: Long,
     val status: String,
