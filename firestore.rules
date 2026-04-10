@@ -27,17 +27,20 @@ service cloud.firestore {
       }
 
       match /notifications/{notificationId} {
-        allow read: if isOwner(uid);
+        // Owner can read all their notifications.
+        // Actor can read notifications they created — needed when cleaning up on account delete.
+        allow read: if isOwner(uid)
+          || (isSignedIn() && resource.data.actorUid == request.auth.uid);
         allow update: if isOwner(uid)
           || (isSignedIn()
           && resource.data.type == "FRIEND_REQUEST"
           && resource.data.actorUid == request.auth.uid
           && request.resource.data.actorUid == request.auth.uid
           && request.resource.data.type == "FRIEND_REQUEST");
+        // Owner can delete any notification.
+        // Actor can delete any notification they created (e.g. on account deletion).
         allow delete: if isOwner(uid)
-          || (isSignedIn()
-          && resource.data.type == "FRIEND_REQUEST"
-          && resource.data.actorUid == request.auth.uid);
+          || (isSignedIn() && resource.data.actorUid == request.auth.uid);
         allow create: if isSignedIn() && request.resource.data.actorUid == request.auth.uid;
       }
 
@@ -76,9 +79,11 @@ service cloud.firestore {
         }
       }
 
-      // Ratings remain private unless you later choose to expose them.
+      // Ratings are readable by any signed-in user so friends can see
+      // each other's scores in the "What your friends ranked" section.
       match /ratings/{ratingId} {
-        allow read, write: if isOwner(uid);
+        allow read: if isSignedIn();
+        allow write: if isOwner(uid);
       }
 
       match /{document=**} {
@@ -86,13 +91,24 @@ service cloud.firestore {
       }
     }
 
-    // Optional account lookup tables are private to the owner uid.
+    match /notes/{noteId} {
+      allow create: if isSignedIn()
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow read, update, delete: if isSignedIn()
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Username lookup needs unauthenticated reads during sign-up.
     match /usernames/{username} {
-      allow read, update, delete: if isSignedIn() && request.auth.uid == resource.data.uid;
+      allow get: if true;
+      allow list: if false;
+      allow update, delete: if isSignedIn() && request.auth.uid == resource.data.uid;
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
     }
 
     match /emails/{email} {
+      allow get: if true;
+      allow list: if false;
       allow read, update, delete: if isSignedIn() && request.auth.uid == resource.data.uid;
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
     }

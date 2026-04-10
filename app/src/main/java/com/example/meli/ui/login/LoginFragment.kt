@@ -51,6 +51,7 @@ class LoginFragment : Fragment() {
                     binding.createUsernameInputLayout.isVisible = true
                     binding.actionButton.text = "Create Account"
                     binding.usernameInputLayout.hint = "Enter email"
+                    binding.createUsernameInputLayout.hint = "Enter username"
                     binding.signInTabUnderline.isVisible = false
                     binding.createAccountTabUnderline.isVisible = true
                     binding.signInTabText.alpha = 0.55f

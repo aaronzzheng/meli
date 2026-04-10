@@ -15,6 +15,14 @@ class AuthRepository {
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
+    private fun userDocument(uid: String) = firestore.collection("users").document(uid)
+
+    private fun usernameDocument(username: String) = firestore.collection("usernames")
+        .document(username.trim().lowercase())
+
+    private fun emailDocument(email: String) = firestore.collection("emails")
+        .document(email.trim().lowercase())
+
     fun getCurrentUser() = auth.currentUser
 
     suspend fun getCurrentUsername(): Result<String> {
@@ -38,12 +46,13 @@ class AuthRepository {
         displayName: String = "",
         username: String = ""
     ): Result<Unit> {
+        var firebaseUser: FirebaseUser? = null
         return try {
+            val normalizedEmail = email.trim()
             val normalizedUsername = username.trim().lowercase()
             validateUsername(normalizedUsername)
-            ensureUsernameAvailable(normalizedUsername)
-            val result = auth.createUserWithEmailAndPassword(email, pass).await()
-            val firebaseUser = result.user ?: throw Exception("User creation failed")
+            val result = auth.createUserWithEmailAndPassword(normalizedEmail, pass).await()
+            firebaseUser = result.user ?: throw Exception("User creation failed")
             val normalizedName = displayName.trim()
             if (normalizedName.isNotBlank()) {
                 val profileUpdates = UserProfileChangeRequest.Builder()
@@ -54,14 +63,36 @@ class AuthRepository {
             val savedDisplayName = normalizedName.ifBlank { firebaseUser.displayName.orEmpty() }
             val user = User(
                 uid = firebaseUser.uid,
-                email = email,
+                email = normalizedEmail,
                 displayName = savedDisplayName,
                 username = normalizedUsername,
                 createdAt = Timestamp.now()
             )
-            firestore.collection("users").document(user.uid).set(user).await()
+            val userRef = userDocument(user.uid)
+            val usernameRef = usernameDocument(normalizedUsername)
+            val emailRef = emailDocument(normalizedEmail)
+
+            firestore.runTransaction { transaction ->
+                val existingUsername = transaction.get(usernameRef)
+                if (existingUsername.exists() && existingUsername.getString("uid") != user.uid) {
+                    throw IllegalArgumentException("Username is already taken")
+                }
+
+                val existingEmail = transaction.get(emailRef)
+                if (existingEmail.exists() && existingEmail.getString("uid") != user.uid) {
+                    throw IllegalArgumentException("Email is already registered")
+                }
+
+                transaction.set(userRef, user)
+                transaction.set(usernameRef, mapOf("uid" to user.uid))
+                transaction.set(emailRef, mapOf("uid" to user.uid))
+            }.await()
+
             Result.success(Unit)
         } catch (e: Exception) {
+            firebaseUser?.let { createdUser ->
+                runCatching { createdUser.delete().await() }
+            }
             Result.failure(e)
         }
     }
@@ -115,11 +146,26 @@ class AuthRepository {
             val user = auth.currentUser ?: throw Exception("No signed-in user")
             val normalizedUsername = newUsername.trim().lowercase()
             validateUsername(normalizedUsername)
-            ensureUsernameAvailable(normalizedUsername, user.uid)
-            firestore.collection("users")
-                .document(user.uid)
-                .set(mapOf("username" to normalizedUsername), SetOptions.merge())
-                .await()
+
+            val userRef = userDocument(user.uid)
+            val userSnapshot = userRef.get().await()
+            val currentUsername = userSnapshot.getString("username").orEmpty().trim().lowercase()
+            val newUsernameRef = usernameDocument(normalizedUsername)
+
+            firestore.runTransaction { transaction ->
+                val existingUsername = transaction.get(newUsernameRef)
+                if (existingUsername.exists() && existingUsername.getString("uid") != user.uid) {
+                    throw IllegalArgumentException("Username is already taken")
+                }
+
+                transaction.set(userRef, mapOf("username" to normalizedUsername), SetOptions.merge())
+                transaction.set(newUsernameRef, mapOf("uid" to user.uid))
+
+                if (currentUsername.isNotBlank() && currentUsername != normalizedUsername) {
+                    transaction.delete(usernameDocument(currentUsername))
+                }
+            }.await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -171,7 +217,12 @@ class AuthRepository {
         return try {
             val user = auth.currentUser ?: throw Exception("No signed-in user")
             val uid = user.uid
-            val userRef = firestore.collection("users").document(uid)
+            val userRef = userDocument(uid)
+            val userSnapshot = userRef.get().await()
+            val username = userSnapshot.getString("username").orEmpty().trim().lowercase()
+            val email = userSnapshot.getString("email")
+                ?.takeIf { it.isNotBlank() }
+                ?: user.email.orEmpty()
 
             // Remove nested ranking entries first.
             val rankingLists = userRef.collection("rankingLists").get().await()
@@ -185,6 +236,14 @@ class AuthRepository {
             deleteSubcollection(userRef, "ratings")
             deleteSubcollection(userRef, "notifications")
             deleteSubcollection(userRef, "tests_manual")
+
+            val notes = firestore.collection("notes")
+                .whereEqualTo("ownerUid", uid)
+                .get()
+                .await()
+            for (noteDoc in notes.documents) {
+                noteDoc.reference.delete().await()
+            }
 
             val usersSnapshot = firestore.collection("users").get().await()
             for (otherUserDoc in usersSnapshot.documents) {
@@ -204,6 +263,12 @@ class AuthRepository {
 
             // Remove user profile document.
             userRef.delete().await()
+            if (username.isNotBlank()) {
+                usernameDocument(username).delete().await()
+            }
+            if (email.isNotBlank()) {
+                emailDocument(email).delete().await()
+            }
 
             // Finally remove Firebase Auth account.
             user.delete().await()
@@ -246,17 +311,6 @@ class AuthRepository {
                 SetOptions.merge()
             )
             .await()
-    }
-
-    private suspend fun ensureUsernameAvailable(username: String, excludingUid: String? = null) {
-        val snapshot = firestore.collection("users")
-            .whereEqualTo("username", username)
-            .get()
-            .await()
-        val existing = snapshot.documents.firstOrNull { it.id != excludingUid }
-        if (existing != null) {
-            throw IllegalArgumentException("Username is already taken")
-        }
     }
 
     private fun validateUsername(username: String) {

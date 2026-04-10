@@ -54,6 +54,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     implementation("io.coil-kt:coil:2.7.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Firebase
@@ -62,6 +63,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
 
     testImplementation(libs.junit)
+    androidTestImplementation("androidx.test:core-ktx:1.6.1")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
